@@ -1,0 +1,11 @@
+1. Title (Tiêu đề)Nên chứa: Phương pháp chính + Đối tượng nghiên cứu + Địa điểm.Ví dụ: "Inferring Intra-city Mobility Flows from Sparse Observations: A Distance-based Probability Approach in Singapore."
+2. Abstract (Tóm tắt)Context: Tầm quan trọng của dữ liệu OD trong quy hoạch đô thị.Gap: Hạn chế của các phương pháp cũ (ví dụ: thiếu dữ liệu ground truth hoặc mô hình Gravity quá đơn giản).Method: Giới thiệu mô hình bạn sử dụng (Origin-constrained, Distance-based bins).Key Results: Kết quả đạt được (ví dụ: CPC đạt bao nhiêu, RMSE giảm bao nhiêu %).
+3. Introduction (Dẫn nhập)Problem Statement: Tại sao việc ước lượng luồng di chuyển tại Singapore lại quan trọng?Literature Review: Tóm tắt các nghiên cứu trước đây về Spatial Interaction Models (Gravity, Radiation).Contribution: Nêu rõ 2-3 điểm mới của bài báo (Ví dụ: Sử dụng xác suất di chuyển thực tế từ dữ liệu mới).
+4. Methodology (Phương pháp nghiên cứu)Đây là phần quan trọng nhất mà mình đã dự thảo cho bạn ở trên. Cần chia nhỏ thành:
+4.1. Study Area and Data Sources: Mô tả về các Zone của Singapore, dữ liệu luồng Out-flow và dữ liệu Ground truth.
+4.2. Probability Distribution of Trip Lengths: Cách bạn xử lý các bin khoảng cách.
+4.3. The Proposed Estimation Model: Trình bày các công thức toán học $T_{ij}$.
+4.4. Evaluation Metrics: Các chỉ số như CPC, RMSE, $R^2$.
+5. Results (Kết quả)Model Performance: So sánh ma trận ước lượng với Ground truth qua biểu đồ Heatmap hoặc Scatter plot.Spatial Analysis: Phân tích xem mô hình dự báo đúng/sai ở những khu vực nào (ví dụ: khu vực trung tâm CBD vs. Ngoại ô).Sensitivity Analysis: (Nếu có) Thử nghiệm xem việc thay đổi kích thước bin ảnh hưởng thế nào đến kết quả.
+6. Discussion (Thảo luận)Interpretation: Giải thích tại sao mô hình lại đạt kết quả như vậy.Implications: Ý nghĩa của kết quả này đối với nhà quản lý giao thông Singapore.Limitations: Những hạn chế (ví dụ: chưa xét đến yếu tố thời gian thực hoặc phương tiện di chuyển cụ thể).
+7. Conclusion (Kết luận)Tóm tắt ngắn gọn các phát hiện chính.Đề xuất hướng phát triển tương lai (Future work).8. References (Tài liệu tham khảo)Trình bày theo chuẩn (thường là APA hoặc IEEE tùy tạp chí).
