@@ -35,7 +35,7 @@ Nghiên cứu đề xuất một khung phương pháp luận mới dựa trên s
 Mô hình Gravity giả định luồng di chuyển tỷ lệ thuận với quy mô dân số và tỷ lệ nghịch với khoảng cách.
 
 ### Công thức tổng quát:
-$$ \hatT_{ij} = \frac{m_i^\alpha n_j^\beta}{f(r_{ij})} $$
+$$ \hat{T}_{ij} = \frac{m_i^\alpha n_j^\beta}{f(r_{ij})} $$
 
 Trong đó $f(r_{ij})$ là hàm cản trở khoảng cách (thường là $r_{ij}^\gamma$ hoặc $e^{\gamma r_{ij}}$). Các ký hiệu khác tuân theo bảng tại mục 4.1.
 
@@ -106,8 +106,8 @@ Dự báo luồng di chuyển tại Alabama:
 $$ \hat{T}_{AL} = 9.790 \times 0,00006 \approx 0,59 \text{ người} $$
 
 Kết quả: mô hình radiation phản ánh tốt hơn về khác biệt quy mô dân số giữa hai vùng. Dữ liệu thực tế cho thấy:
-    $\hat{T}_{UT} = 44$ 
-    $\hat{T}_{AL} = 6$
+    $T_{UT} = 44$ 
+    $T_{AL} = 6$
 
 ## 4.4 Proposed Model: Attraction-Weighted Shell Model
 Mô hình đề xuất hoạt động dựa trên cơ chế phân bổ hai giai đoạn (Two-step allocation):
