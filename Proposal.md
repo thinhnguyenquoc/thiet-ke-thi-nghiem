@@ -49,7 +49,86 @@ $T_{AL} \propto \frac{m_i^\alpha n_j^\beta}{f(r_{ij})} = \frac{89000^{0.24} \tim
 Kết quả dự báo: Bởi vì dân số ở điểm gốc (90.000≈89.000), dân số ở điểm đích (240.000≈280.000) và khoảng cách (447≈410) của hai cặp này gần như tương đương nhau, mô hình Gravity dự báo số lượng người di chuyển cho cả hai cặp đều là 1 người
 
 ## 3.2 Radiation model
+Dưới đây là công thức của Mô hình Radiation[12]
+$$ T_{ij} = T_i \frac{m_i \times n_j}{(m_i + s_{ij}) \times (m_i + n_j + s_{ij})}$$
 
+Trong đó
+- $T_{ij}$: Số lượng chuyến đi (hoặc luồng di cư) trung bình dự báo từ địa điểm gốc i đến địa điểm đích j
+- $T_i$: Tổng số lượng người khởi hành (tổng outflows/migrants) rời khỏi địa điểm gốc i
+- $m_i$: Quy mô dân số tại địa điểm gốc i
+- $n_j$: Quy mô dân số tại địa điểm đích j
+- $s_{ij}$: Tổng dân số sinh sống trong vùng không gian hình tròn có tâm tại i và bán kính là khoảng cách $r_{ij}$ (vừa chạm đến điểm j). Biến số này loại trừ (không bao gồm) dân số của bản thân điểm gốc i và điểm đích j
+
+Ví dụ:
+Cặp 1: Bang Utah (Khu vực thưa dân)
+Dân số gốc (m_i) = 90.000
+Dân số đích (n_j) = 240.000
+Dân số xen giữa (s_ij) = 2×10^6 (2.000.000)
+Tổng lượng người đi làm ước tính: T_i = 0.11×90.000 = 9.900 người.
+Tính xác suất chọn điểm đến (P_UT):
+Tử số: m_i ×n_j = 90.000×240.000 = 21,6×10^9
+Mẫu số 1 (m_i +s_ij): 90.000+2.000.000=2.090.000
+Mẫu số 2 (m_i +n_j +s_ij): 90.000+240.000+2.000.000=2.330.000
+Xác suất P_UT = (2.090.000×2.330.000)/(21,6×10^9) ≈ 4,87×10^12 / (21,6×10^9) ≈ 0,00443
+Dự báo luồng di chuyển tại Utah: T_UT = T_i ×P_UT = 9.900×0,00443 ≈ 43,9 người
+
+Cặp 2: Bang Alabama (Khu vực đông dân)
+Dân số gốc (m_i) = 89.000
+Dân số đích (n_j) = 280.000
+Dân số xen giữa (s_ij) = 2×10^7 (20.000.000)
+Tổng lượng người đi làm ước tính: T_i = 0.11×89.000 = 9.790 người.
+Tính xác suất chọn điểm đến (P_AL):
+Tử số: m_i ×n_j = 89.000×280.000 = 24,92×10^9
+Mẫu số 1 (m_i +s_ij): 89.000+20.000.000=20.089.000
+Mẫu số 2 (m_i +n_j +s_ij): 89.000+280.000+20.000.000=20.369.000
+Xác suất P_AL = (20.089.000×20.369.000)/(24,92×10^9) ≈ 409,2×10^12 / (24,92×10^9) ≈ 0,00006
+Dự báo luồng di chuyển tại Alabama: T_AL = T_i ×P_AL = 9.790×0,00006 ≈ 0,59 người
+
+
+# 4. Methodology
+## 4.1 Notation and Data Inputs
+## 4.2 Model Structure
+## 4.3 Probability Distribution of Trip Lengths
+
+
+4.2. Probability Distribution of Trip Lengths: Cách bạn xử lý các bin khoảng cách.
+4.3. The Proposed Estimation Model: Trình bày các công thức toán học $T_{ij}$.
+ +n 
+j
+​
+ +s 
+ij
+​
+ ): 90.000+240.000+2.000.000=2.330.000
+Xác suất P 
+UT
+​
+ = 
+2.090.000×2.330.000
+21,6×10 
+9
+ 
+​
+ ≈ 
+4,87×10 
+12
+ 
+21,6×10 
+9
+ 
+​
+ ≈0,00443
+Dự báo luồng di chuyển tại Utah: 
+T 
+UT
+​
+ =T 
+i
+​
+ ×P 
+UT
+​
+ =9.900×0,00443≈43,9 người
 
 # 4. Methodology
 ## 4.1 Notation and Data Inputs
