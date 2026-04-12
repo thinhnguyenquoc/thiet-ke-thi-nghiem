@@ -1,26 +1,57 @@
-<!-- 1. Title (Tiêu đề)Nên chứa: Phương pháp chính + Đối tượng nghiên cứu + Địa điểm.Ví dụ: "Inferring Intra-city Mobility Flows from Sparse Observations: A Distance-based Probability Approach in Singapore." -->
 # 1. Title (Tiêu đề)
 Sử dụng mô hình dựa trên phân bổ xác suất di chuyển để ước lượng luồng di chuyển tại các thành phố lớn: Singapre, Seoul
-<!-- 2. Abstract (Tóm tắt)Context: Tầm quan trọng của dữ liệu OD trong quy hoạch đô thị.Gap: Hạn chế của các phương pháp cũ (ví dụ: thiếu dữ liệu ground truth hoặc mô hình Gravity quá đơn giản).Method: Giới thiệu mô hình bạn sử dụng (Origin-constrained, Distance-based bins).Key Results: Kết quả đạt được (ví dụ: CPC đạt bao nhiêu, RMSE giảm bao nhiêu %). -->
 # 2. Abstract
 Dữ liệu luồng di chuyển giữa các khu vực trong thành phố rất quan trọng cho các lĩnh vực quy hoạch giao thông, phân tích thị trường, dự báo dịch bệnh. Do đó có nhiều nghiên cứu đã cố gắng ước lượng luồng di chuyển từ nhiều nguồn dữ liệu khác nhau như dữ liệu GPS, dữ liệu điện thoại di động, dữ liệu câu hỏi khảo sát. Tuy nhiên, các phương pháp này đều có những hạn chế về giả định và yêu cầu dữ liệu khắt khe. Nghiên cứu đề xuất một phương pháp ước lượng mới dựa trên phân bổ xác suất di chuyển nhằm cải thiện độ chính xác của các mô hình cũ với sự kết hợp của dữ liệu mở từ Open street map. Kết quả đạt được ...
-<!-- 3. Introduction (Dẫn nhập)Problem Statement: Tại sao việc ước lượng luồng di chuyển tại Singapore lại quan trọng?Literature Review: Tóm tắt các nghiên cứu trước đây về Spatial Interaction Models (Gravity, Radiation).Contribution: Nêu rõ 2-3 điểm mới của bài báo (Ví dụ: Sử dụng xác suất di chuyển thực tế từ dữ liệu mới). -->
 # 3. Introduction
-Các mô hình truyền thông như gravity, radiation luôn được áp dụng rộng rãi để để ước lượng luồng di chuyển giữa các khu vực địa lý và đã mang lại nhiều kết quả thành công.Tuy nhiên tuỳ thuộc vào các kiểu dữ liệu và đặc điểm của khu vực mà các mô hình này có những hạn chế khác nhau. 
-Có thể kết luận rằng mô hình gravity có nhược điểm là thông số được ước lượng từ dữ liệu đã được cung cấp theo lịch sử hoặc thu thập nên khó áp dụng cho vùng thiếu dữ liệu[5,12]. Mô hình radiation thì có giả định đơn điệu là mọi người ưu tiên đi gần nhất để kiếm công việc, cơ hội hơn là cố gắng đi xa hơn để hưởng các tiện ích khác[12,8]. Điều này chưa phù hợp với các siêu đô thị nơi có số lượng tiện ích rất lớn và người dân di chuyển nhiều để sử dụng các tiện ích này.[8]
-Các giải pháp khắc phục chính để cải thiện yếu điểm này là thay thế dần việc chỉ sử dụng dân số là chỉ số đánh giá và kinh tế xã hội. Nghiên cứu mô hình bức xạ tổng quát (Generalized Radiation Model) sử dụng thông tin về POI, dân số, mật độ dân số để làm thước đo mới[8]. Các phương pháp machine learning học nhiều đặc tính của các khu vực quan sát thông qua nhiều thuộc tính dữ liệu, cũng như sử dụng ảnh vệ tinh để học cấu trúc không gian[5,7]. Tuy nhiên các phương pháp học sâu và máy học này vẫn đòi hỏi dữ liệu lớn nhiều chiều và khó chuyển đổi (transfer) cho các khu vực ít dữ liệu do phụ thuộc vào lượng lớn nhãn huấn luyện.[5,9]
-Nghiên cứu của chúng tôi sử dụng xác suất di chuyển có điều kiện của một người tại một khu vực cụ thể kết hợp dữ liệu POI để phục hồi luồng di chuyển khi biết tổng số lượng di chuyển đi ra (outflows) từ một khu vực của các siêu đô thị như Singapore, Seoul (thường tỉ lệ thuận với dân số)[13,14,15]. Hướng tiếp cận ràng buộc đầu ra (Production Constrained) này mang lại một hướng nghiên cứu mới khắc phục sự yếu thế của mô hình radiation vì giả định tối ưu hoá việc ít di chuyển trong môi trường siêu đô thị đa tiện ích là rất hạn chế.[5,7,14]
+Các mô hình tương tác không gian truyền thống như Gravity và Radiation từ lâu đã được áp dụng rộng rãi để ước lượng luồng di chuyển (mobility flows) và mang lại nhiều kết quả quan trọng trong quản lý đô thị. Tuy nhiên, khả năng dự báo của các mô hình này thường bị hạn chế bởi những giả định lý thuyết chưa bao quát được sự phức tạp của các siêu đô thị hiện đại.
+Cụ thể, mô hình Gravity gặp trở ngại lớn do các tham số suy giảm khoảng cách ($\alpha, \beta$) phụ thuộc chặt chẽ vào dữ liệu lịch sử, khiến nó mất đi tính linh hoạt khi áp dụng cho các khu vực thiếu dữ liệu quan sát [5,12]. Ngược lại, mô hình Radiation dù có lợi thế không tham số (parameter-free) nhưng lại dựa trên giả định đơn điệu về việc tối ưu hóa khoảng cách để tìm kiếm cơ hội [12,8]. Giả định này không còn phù hợp trong bối cảnh các siêu đô thị đa trung tâm, nơi sự phân bổ dày đặc của các điểm tiện ích (Points of Interest - POIs) thúc đẩy các hành vi di chuyển vượt ra ngoài quy luật "gần nhất" để thỏa mãn các nhu cầu dịch vụ đa dạng [8].
+Để khắc phục, nhiều nghiên cứu gần đây đã chuyển hướng sang các giải pháp dựa trên dữ liệu (Data-driven), đặc biệt là học máy và học sâu nhằm khai thác thông tin từ OpenStreetMap hoặc ảnh vệ tinh để hiểu cấu trúc không gian [5,7]. Mặc dù cải thiện đáng kể độ chính xác, nhưng các phương pháp này vẫn đòi hỏi tài nguyên tính toán lớn, dữ liệu huấn luyện khổng lồ và thường thiếu khả năng giải thích về mặt cơ chế đô thị [5,9].
+Nghiên cứu của chúng tôi đề xuất một hướng tiếp cận mới: sử dụng khung xác suất di chuyển có điều kiện (conditional mobility probability) kết hợp với dữ liệu POI để phục hồi ma trận Origin-Destination (OD). Bằng cách áp dụng ràng buộc đầu ra (Production-constrained)[1], phương pháp này không chỉ tận dụng được dữ liệu mở từ OpenStreetMap mà còn khắc phục trực tiếp yếu điểm của mô hình Radiation trong môi trường siêu đô thị nén như Singapore và Seoul. Hướng tiếp cận này hứa hẹn mang lại một giải pháp cân bằng giữa tính chính xác của dữ liệu thực nghiệm và tính tổng quát của các luật di chuyển hệ thống.
+## 3.1 Gravity Models
+Dưới đây là công thức của Mô hình Trọng trường (Gravity Model)[1]
 
-## 3.1 Traditrional Spatial Interaction Models
-- Mô hình Gravity:
-    giớ hạn: [Semini2012] khung lý thuyết Cực đại hóa Entropy (Wilson, 1967) cho thấy khi kiểm tra ở entropy cực đại thì alpha, Beta gần về 1, nhưng hàm suy giảm khoảng cách không biết là theo làm mũ hay hàm e mũ. chưa có thực nghiệm hay lý thuyết nào để làm cơ sở chọn hàm suy giảm phù hợp. Khi đưa qua các kkhu vực ít thông tin về giao thông thì ước lượng alpha beta bị hạn chế.
-- Mô hình Radiation
-## 3.2 Data-driven approaches
-- Mô hình deep gravity 
-- Thu giảm số trường dữ liệu cần bằng cách học từ dữ liệu mở OpenStreetMap
-<!-- # 4. Methodology (Phương pháp nghiên cứu)Đây là phần quan trọng nhất mà mình đã dự thảo cho bạn ở trên. Cần chia nhỏ thành: -->
+$$ T_{ij} = \frac{m_i^\alpha n_j^\beta}{f(r_{ij})} $$
+
+Trong đó
+- **$T_{ij}$**: Số lượng cá nhân di chuyển từ địa điểm gốc $i$ đến địa điểm đích $j$ trên một đơn vị thời gian.
+- **$m_i$**: Quy mô dân số tại địa điểm gốc $i$.
+- **$n_j$**: Quy mô dân số tại địa điểm đích $j$.
+- **$r_{ij}$**: Khoảng cách vật lý giữa hai địa điểm $i$ và $j$.
+- **$\alpha$** và **$\beta$**: Các số mũ (tham số) có thể điều chỉnh được.
+- **$f(r_{ij})$**: Hàm cản trở khoảng cách (deterrence function).
+
+Ví dụ về ước lượng luồng di chuyển bằng mô hình Gravity:
+Chúng ta xét hai cặp địa điểm có đặc điểm dân số và khoảng cách rất tương đồng nhau:
+Cặp 1 (Bang Utah - UT):
+Điểm gốc (Washington County): Dân số $m_i =90.000$ người.
+Điểm đích (Davis County): Dân số $n_j =240.000$ người.
+Khoảng cách $r_{ij} =447$ km.
+Cặp 2 (Bang Alabama - AL):
+Điểm gốc (Houston County): Dân số $m_i =89.000$ người.
+Điểm đích (Madison County): Dân số $n_j =280.000$ người.
+Khoảng cách $r_{ij} =410$ km.
+
+Các tham số của mô hình (Parameters)
+
+Theo công thức Gravity $T_{ij} \propto \frac{m_i^\alpha n_j^\beta}{f(r_{ij})}$, nhóm tác giả đã sử dụng dữ liệu thực tế để huấn luyện và tìm ra bộ tham số tốt nhất cho các chuyến đi có khoảng cách $r>119$ km
+. Bộ tham số thu được là:
+α=0.24 (hệ số cho dân số điểm gốc)
+β=0.14 (hệ số cho dân số điểm đích)
+Hàm cản trở khoảng cách $f(r_{ij}) =r_{ij}^c$ với $c=0.29$
+
+Áp dụng tính toán (Calculation)
+Khi thay các giá trị vào công thức để dự báo luồng di chuyển (đã bao gồm hằng số tỉ lệ chuẩn hóa từ mô hình), ta có phép tính tỉ lệ như sau:
+Đối với cặp ở Utah: 
+$T_{UT} \propto \frac{m_i^\alpha n_j^\beta}{f(r_{ij})} = \frac{90000^{0.24} \times 240000^{0.14}}{447^{0.29}}$
+Đối với cặp ở Alabama: 
+$T_{AL} \propto \frac{m_i^\alpha n_j^\beta}{f(r_{ij})} = \frac{89000^{0.24} \times 280000^{0.14}}{410^{0.29}}$
+
+Kết quả dự báo: Bởi vì dân số ở điểm gốc (90.000≈89.000), dân số ở điểm đích (240.000≈280.000) và khoảng cách (447≈410) của hai cặp này gần như tương đương nhau, mô hình Gravity dự báo số lượng người di chuyển cho cả hai cặp đều là 1 người
+
+## 3.2 Radiation model
+
+
 # 4. Methodology
-<!-- 4.1. Study Area and Data Sources: Mô tả về các Zone của Singapore, dữ liệu luồng Out-flow và dữ liệu Ground truth. -->
 ## 4.1 Notation and Data Inputs
 ## 4.2 Model Structure
 ## 4.3 Probability Distribution of Trip Lengths
