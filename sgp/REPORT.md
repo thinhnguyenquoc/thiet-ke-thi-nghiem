@@ -1,46 +1,53 @@
-# Comparative Mobility Analysis: A 3-Model Investigation
+# Comparative Mobility Analysis: Singapore Case Study
 
 ## Executive Summary
-This report summarizes a city-wide evaluation of three distinct human mobility models for Singapore (N=303 subzones). By comparing a **Global Probabilistic Baseline**, a **Uniform Null Model**, and an **Attraction-Weighted Gravity Model**, we quantify the impact of both **spatial structure** and **urban attraction** on predictive accuracy.
+This report summarizes a city-wide evaluation of human mobility models for Singapore (N=303 subzones). By comparing parametric gravity models, radiation models (Population vs POI), and our proposed **Shell-Constrained Gravity Models**, we quantify the impact of spatial structure and urban attraction on predictive accuracy across multiple metrics (CPC, $R^2$, MAE, RMSE).
 
 ---
 
-## 1. Model Definitions
+## 1. Study Profile
+- **Geography**: Singapore (323 Planning Subzones).
+- **Coordinate System**: **EPSG:3414 (SVY21)**, optimized for Singapore.
+- **POI Dataset**: Extracted from OSM including retail, amenity, and transport features.
 
-| Model | Classification | Core Logic | Normalization |
+---
+
+## 2. Methodology: Framework Comparison
+
+| Model | Classification | Core Logic | Mass Proxy |
 | :--- | :--- | :--- | :--- |
-| **Global Probabilistic** | Baseline | Global distance-decay probability $P(bin_k)$ | City-wide sum |
-| **Uniform Null** | Null Model | 1km Shell/Ring Constraint + Equal allocation | Within-bin shells |
-| **Attraction-Weighted**| Full Model | 1km Shell/Ring Constraint + POI count ($A_j$) | Within-bin shells |
-
-> [!IMPORTANT]
-> The **Global Probabilistic** model is a singly-constrained baseline. While it successfully conserves the total trip production (Out-flow) of each origin, it does not guarantee that predicted total **In-flow** at destinations will match observed data.
-
-> [!NOTE]
-> The POI attraction weight ($A_j$) is defined as the **simple total count** of all Point-of-Interest occurrences within a subzone.
+| **Radiation (Pop)** | Alternative | Interv. Opportunities | Population density |
+| **Radiation (POI)** | Alternative | Refined Interv. Opp. | **POI density** |
+| **Exponential Decay** | Parametric | Gravity + $e^{-\gamma r}$ | Population mass |
+| **Power Decay** | Parametric | Gravity + $r^{-\gamma}$ | Population mass |
+| **Attraction-Uniform**| Structural | 1km Shell Constraint | Equal allocation |
+| **Attraction-Weighted**| **Full Logic** | **Shells + POIs ($A_j$)** | **POI attraction** |
 
 ---
 
-## 2. Global Results (Mean performance across 303 subzones)
+## 3. Comparative Results (Singapore Average)
 
-The results demonstrate a clear hierarchical improvement in accuracy as spatial and contextual constraints are added.
+The results demonstrate a clear hierarchy where discrete structural models outperform smooth analytical curves in capturing Singapore's dense urban layout.
 
-| Model Version | Average **CPC** | Average **$R^2$** | Model Contribution |
-| :--- | :--- | :--- | :--- |
-| Global Probabilistic | 0.5050 | 0.2550 | Baseline mobility law |
-| Uniform Null | 0.6027 | 0.5347 | **+19.3% gain** from shell constraint |
-| **Attraction-Weighted**| **0.6764** | **0.6256** | **+12.2% gain** from urban context |
+| Model Version | **CPC** | **$R^2$** | **MAE** (Trips) | **RMSE** (Trips) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Radiation (Pop)** | 0.1822 | -9.75 | 107.83 | 625.39 |
+| **Radiation (POI)** | 0.2681 | -8.95 | 110.10 | 697.22 |
+| **Exponential Decay** | 0.2628 | -0.09 | 69.54 | 258.28 |
+| **Power Decay** | 0.3052 | -0.22 | 67.28 | 249.59 |
+| **Attraction-Uniform**| 0.6027 | 0.53 | 57.26 | 146.78 |
+| **Attraction-Weighted**| **0.6764** | **0.63** | **44.96** | **124.02** |
 
----
-
-## 3. Analysis and Conclusion
-- **The Value of Shell Logic**: The transition from the Global model to the **Uniform Null Model** shows that simply forcing the model to respect 1km distance shells (spatial constraints) improves prediction by nearly **20%**. 
-- **The Value of Urban Attraction**: The final transition to the **Attraction-Weighted Model** demonstrates that Point-of-Interest data is the critical layer that allows the model to differentiate between destinations within the same distance range, leading to our peak performance of **0.676 CPC**.
-- **Validated Hypothesis**: The scale-dependent transition hypothesis is supported by the fact that local attraction features (POIs) only reach their full potential when combined with a robust distance-shell structure.
+### Key Insights:
+- **Spatial Accuracy**: Using empirical **1km distance shells** (Attraction-Uniform, 0.603 CPC) doubles the spatial overlap compared to the best analytical model (Power Law, 0.305 CPC).
+- **Urban Refinement**: The addition of POI data (Attraction-Weighted) reduces the MAE from 57 to **45 trips**, a further **21% reduction in error**.
+- **Radiation Improvement**: Switching from population to POIs in the Radiation model significantly improved CPC from **0.18** to **0.27**, similar to the trend observed in Seoul.
 
 ---
 
 ## 4. Documentation Index
-- **Comparative Metrics**: [step6_evaluation_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/step6_evaluation_results.csv)
-- **Predictions (All Versions)**: [step3](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/step3_gravity_results.csv), [step4](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/step4_gravity_results.csv), [step5](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/step5_gravity_results.csv)
-- **Workflow Script**: [run_full_comparison.py](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/run_full_comparison.py)
+- **Full Comparative Metrics**: [step9_full_comparison.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step9_full_comparison.csv)
+- **Radiation POI Results**: [step8_radiation_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step8_radiation_results.csv)
+- **Gravity Decay Parameters**: [step7_gravity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step7_gravity_results.csv)
+- **Radiation Pop Results**: [step6_radiation_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step6_radiation_results.csv)
+- **Model Result Files**: [step3 (Uniform)](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step3_gravity_results.csv), [step4 (Weighted)](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step4_gravity_results.csv)

@@ -1,7 +1,7 @@
 # Urban Mobility Model Report: Seoul City-Wide Analysis
 
 ## Executive Summary
-This report summarizes the comparative validation of three cumulative human mobility models for **Seoul**, South Korea. Using a dataset of **406 origin subzones** and **101,185 Points of Interest (POIs)**, we quantified the predictive improvement of incorporating both **spatial structure (Shells)** and **urban attraction (POIs)** into a multi-model framework.
+This report summarizes the comparative validation of **six human mobility models** for **Seoul**, South Korea. By evaluating over 400 origin subzones and 100,000+ POIs, we quantified the predictive improvement of incorporating spatial shells, urban attraction, and refined intervening opportunities logic across multiple statistical metrics (CPC, $R^2$, MAE, RMSE).
 
 ---
 
@@ -12,42 +12,41 @@ This report summarizes the comparative validation of three cumulative human mobi
 
 ---
 
-## 2. Methodology: Triple-Model Comparison
-We evaluated the accuracy $(\text{CPC})$ across three distinct layers of model complexity:
+## 2. Methodology: Multi-Model Framework
 
-| Model | Classification | Core Logic | Description |
+| Model | Classification | Core Logic | Mass Proxy |
 | :--- | :--- | :--- | :--- |
-| **Global Probabilistic** | Baseline | Global distance-decay $P(bin_k)$ | Unconstrained decay model. |
-| **Uniform Null** | Null Model | Shell Constraint + Equal allocation | Within-bin homogeneous distribution. |
-| **Attraction-Weighted**| Full Model | Shell Constraint + POI count ($A_j$) | Within-bin heterogeneous distribution. |
-
-> [!IMPORTANT]
-> The **Global Probabilistic** model conserves total trip production (Out-flow) but is not constrained by destination attraction (In-flow).
-
-> [!NOTE]
-> The POI attraction weight ($A_j$) is defined as the **simple total count** of all Point-of-Interest occurrences within a subzone.
+| **Radiation (Pop)** | Alternative | Intervening Opportunities | Population density |
+| **Radiation (POI)** | Alternative | Refined Interv. Opp. | **POI density** |
+| **Exponential Decay** | Parametric | Gravity + $e^{-\gamma r}$ | Population mass |
+| **Power Decay** | Parametric | Gravity + $r^{-\gamma}$ | Population mass |
+| **Attraction-Uniform** | Structural | 1km Shell Constraint | Equal allocation |
+| **Attraction-Weighted**| **Full Logic** | **Shells + POIs ($A_j$)** | **POI attraction** |
 
 ---
 
-## 3. Comparative Results (Step 6 Summary)
+## 3. Comparative Results (Seoul City-Wide Average)
 
-The study reveals a strong hierarchical improvement in spatial overlap (CPC) as each layer of spatial logic is added.
+The study reveals a strong hierarchical improvement in spatial overlap (CPC) and error reduction (MAE/RMSE) as we move from smooth functional models to discrete structural models.
 
-| Model Version | Average **CPC** | Average **$R^2$** | Model Contribution |
-| :--- | :--- | :--- | :--- |
-| Global Probabilistic | 0.5880 | 0.6120 | Baseline distance decay |
-| Uniform Null | 0.7205 | 0.7375 | **+22.5% gain** from shell constraint |
-| **Attraction-Weighted**| **0.7623** | **0.7842** | **+5.8% gain** from urban logic |
+| Model Version | **CPC** | **$R^2$** | **MAE** (Trips) | **RMSE** (Trips) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Radiation (Pop)** | 0.3073 | -5.02 | 3,302.96 | 24,832.80 |
+| **Radiation (POI)** | 0.3673 | -5.29 | 3,159.82 | 23,368.84 |
+| **Exponential Decay** | 0.3497 | 0.04 | 2,162.00 | 11,032.56 |
+| **Power Decay** | 0.4768 | -0.01 | 1,944.14 | 10,240.53 |
+| **Attraction-Uniform** | 0.7205 | 0.73 | 1,387.03 | 5,328.68 |
+| **Attraction-Weighted**| **0.7623** | **0.77** | **1,154.30** | **4,447.67** |
 
 ### Key Insights:
-- **Structural Mastery in Seoul**: Moving from the global model to the **Uniform Null Model** proporciona the largest gain (**+22.5%**). This confirms that Seoul's mobility is fundamentally dictated by strict distance-dependent histograms.
-- **Predictive Peak**: The **Attraction-Weighted Model** achieves a high **0.762 CPC** city-wide, proving that localized POI features successfully resolve destination choice within the 1km distance shells.
-- **Robust Complexity**: The model remains consistent across all 406 districts, successfully validating the 2-step gravity logic for high-density Asian urbanism.
+- **Error Reduction**: The **Attraction-Weighted Model** reduces the Mean Absolute Error (MAE) by **16.7%** compared to the Uniform model and by over **65%** compared to the Radiation models.
+- **Spatial Precision (CPC)**: Respecting the **1km Shell Constraint** is the single most important factor, boosting CPC from ~0.47 (Parametric) to over **0.72** (Attraction-Uniform).
+- **Urban Context**: Point-of-Interest data accounts for the final peak in performance, driving the CPC to **0.762** and minimizing the RMSE.
 
 ---
 
 ## 4. Documentation Index
-- **Full Comparative Metrics**: [step6_evaluation_comparison.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step6_evaluation_comparison.csv)
-- **POI Attraction Data**: [pois_by_zone.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/pois_by_zone.csv)
-- **Model Result Files**: [step3 (Uniform)](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step3_gravity_results.csv), [step4 (Weighted)](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step4_gravity_results.csv), [step5 (Global)](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step5_gravity_results.csv)
-- **Extraction Source**: [detail_pois.geojson](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/detail_pois.geojson)
+- **Full Comparative Metrics**: [step9_full_comparison.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step9_full_comparison.csv)
+- **Gravity Decay Parameters**: [step7_gravity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step7_gravity_results.csv)
+- **Radiation Results**: [step6_radiation_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step6_radiation_results.csv)
+- **Summary Metrics (CSV)**: [step9_summary_metrics.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step9_summary_metrics.csv)
