@@ -60,8 +60,10 @@ Dựa trên việc huấn luyện từ dữ liệu thực tế cho các chuyến
 **Quy trình tính toán:**
 Thay các giá trị thực tế vào công thức tỷ lệ:
 - Luồng di chuyển tại Utah:
+  
 $$ T_{UT} \propto \frac{90.000^{0.24} \times 240.000^{0.14}}{447^{0.29}} = 1 $$
 - Luồng di chuyển tại Alabama:
+  
 $$ T_{AL} \propto \frac{89.000^{0.24} \times 280.000^{0.14}}{410^{0.29}} = 1 $$
 
 **Kết quả:** Do dân số và khoảng cách của hai cặp gần như tương đương, mô hình dự báo số lượng di chuyển cho cả hai trường hợp đều bằng **1 người**, cho thấy mô hình Gravity gặp khó khăn trong việc phản ánh sự khác biệt thực tế giữa các vùng địa lý khác nhau.
@@ -82,7 +84,7 @@ Các ký hiệu và ý nghĩa biến số tương tự quy ước tại mục 4.
 - Dân số xen giữa ($s_{ij}$) = $2 \times 10^6$ (2.000.000)
 - Tổng lượng người đi làm ước tính ($O_i$): $0.11 \times 90.000 = 9.900$ người.
 
-*Xác suất chọn điểm đến ($P_{UT}$):*
+**Xác suất chọn điểm đến $P_{UT}$ :**
 - Tử số: $m_i \times n_j = 90.000 \times 240.000 = 21,6 \times 10^9$
 - Mẫu số 1 ($m_i + s_{ij}$): $90.000 + 2.000.000 = 2.090.000$
 - Mẫu số 2 ($m_i + n_j + s_{ij}$): $90.000 + 240.000 + 2.000.000 = 2.330.000$
@@ -96,18 +98,19 @@ Các ký hiệu và ý nghĩa biến số tương tự quy ước tại mục 4.
 - Dân số xen giữa ($s_{ij}$) = $2 \times 10^7$ (20.000.000)
 - Tổng lượng người đi làm ước tính ($O_i$): $0.11 \times 89.000 = 9.790$ người.
 
-*Xác suất chọn điểm đến ($P_{AL}$):*
+**Xác suất chọn điểm đến $P_{AL}$ :**
 - Tử số: $89.000 \times 280.000 = 24,92 \times 10^9$
 - Mẫu số 1 ($m_i + s_{ij}$): $89.000 + 20.000.000 = 20.089.000$
 - Mẫu số 2 ($m_i + n_j + s_{ij}$): $89.000 + 280.000 + 20.000.000 = 20.369.000$
 - $P_{AL} = \frac{24,92 \times 10^9}{20.089.000 \times 20.369.000} \approx 0,00006$
 
 Dự báo luồng di chuyển tại Alabama: 
+
 $$ \hat{T}_{AL} = 9.790 \times 0,00006 \approx 0,59 \text{ người} $$
 
 Kết quả: mô hình radiation phản ánh tốt hơn về khác biệt quy mô dân số giữa hai vùng. Dữ liệu thực tế cho thấy:
-    $T_{UT} = 44$ 
-    $T_{AL} = 6$
+    $$T_{UT} = 44$$ 
+    $$T_{AL} = 6$$
 
 ## 4.4 Proposed Model: Attraction-Weighted Shell Model
 Mô hình đề xuất hoạt động dựa trên cơ chế phân bổ hai giai đoạn (Two-step allocation):
@@ -119,6 +122,7 @@ Lượng chuyến đi từ $i$ trước hết được phân bổ vào các dả
 Trong mỗi dải $\text{bin}_k$, các chuyến đi được phân bổ cho các vùng đích $j$ dựa trên tỷ trọng POI của vùng đó so với tổng POI của tất cả các vùng cùng nằm trong dải.
 
 Công thức tổng quát của mô hình **Attraction-Weighted**:
+
 $$ \hat{T}_{ij} = O_{i} \times P(\text{bin}_{k}) \times \frac{A_j}{\sum_{z \in \text{bin}_{k}} A_z} $$
 
 Trong đó $k$ là dải khoảng cách chứa vùng $j$ tính từ vùng $i$ ($r_{ij} \in \text{bin}_k$).
@@ -126,7 +130,9 @@ Trong đó $k$ là dải khoảng cách chứa vùng $j$ tính từ vùng $i$ ($
 ## 4.5 Probability Distribution of Trip Lengths
 Thay vì giả định một hàm suy giảm khoảng cách liên tục (như hàm Power hay Exponential), nghiên cứu này sử dụng phân bổ xác suất thực nghiệm rời rạc. 
 - **Lợi ích**: Phương pháp này khắc phục được sai số tại các khoảng cách cực ngắn (vấn đề "singularity" trong mô hình Gravity) và phản ánh chính xác các đặc điểm địa lý đặc thù của siêu đô thị (như ranh giới tự nhiên hoặc cấu trúc quy hoạch tập trung).
-- **Cách xác định**: $P(\text{bin}_k) = \frac{\sum_{i,j \in \text{bin}_k} T_{ij}}{\sum_{i,j} T_{ij}}$. Mỗi bin được thiết lập với độ phân giải 1km để cân bằng giữa độ chi tiết không gian và tính ổn định thống kê.
+- **Cách xác định**: $ P(\text{bin}_k) = \frac{\sum_{i,j \in \text{bin}_k} T_{ij}}{\sum_{i,j} T_{ij}}  $
+  
+  Mỗi bin được thiết lập với độ phân giải 1km để cân bằng giữa độ chi tiết không gian và tính ổn định thống kê.
 
 # 5. Results
 Kết quả thực nghiệm cho thấy một sự phân cấp rõ rệt về hiệu suất dự báo giữa các nhóm mô hình. Phương pháp tiếp cận dựa trên khung xác suất di chuyển với các ràng buộc về khoảng cách (**Attraction-Uniform**) và trọng số tiện ích (**Attraction-Weighted**) cho kết quả tốt nhất ở cả hai thành phố.
