@@ -130,8 +130,10 @@ Trong đó $k$ là dải khoảng cách chứa vùng $j$ tính từ vùng $i$ ($
 ## 4.5 Probability Distribution of Trip Lengths
 Thay vì giả định một hàm suy giảm khoảng cách liên tục (như hàm Power hay Exponential), nghiên cứu này sử dụng phân bổ xác suất thực nghiệm rời rạc. 
 - **Lợi ích**: Phương pháp này khắc phục được sai số tại các khoảng cách cực ngắn (vấn đề "singularity" trong mô hình Gravity) và phản ánh chính xác các đặc điểm địa lý đặc thù của siêu đô thị (như ranh giới tự nhiên hoặc cấu trúc quy hoạch tập trung).
-- **Cách xác định**: $ P(\text{bin}_k) = \frac{\sum_{i,j \in \text{bin}_k} T_{ij}}{\sum_{i,j} T_{ij}}  $
-  
+- **Cách xác định**:
+
+  $$ P(\text{bin}_k) = \frac{\sum_{i,j \in \text{bin}_k} T_{ij}}{\sum_{i,j} T_{ij}}  $$
+
   Mỗi bin được thiết lập với độ phân giải 1km để cân bằng giữa độ chi tiết không gian và tính ổn định thống kê.
 
 # 5. Results
