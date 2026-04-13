@@ -19,8 +19,9 @@ Nghiên cứu đề xuất một khung phương pháp luận mới dựa trên s
 
 | Ký hiệu | Ý nghĩa | Ghi chú |
 | :--- | :--- | :--- |
-| **$i, j$** | Các đơn vị phân vùng đô thị | Subzones (Phường/Sub-district) |
-| **$T_{ij}$** | Luồng di chuyển từ $i$ đến $j$ | Số lượng chuyến đi thực tế hoặc dự báo |
+| **$i, j$** | Các đơn vị phân vùng đô thị | subzones |
+| **$T_{ij}$** | Số lượng chuyến đi từ $i$ đến $j$ | Số lượng chuyến đi thực tế |
+| **$\hat{T}_{ij}$** | Số lượng chuyến đi từ $i$ đến $j$ | Số lượng chuyến đi dự báo |
 | **$O_i$** | Tổng lưu lượng xuất phát từ $i$ | $\sum_j T_{ij}$ (Production-constrained) |
 | **$r_{ij}$** | Khoảng cách Euclidean ($i \rightarrow j$) | Tính dựa trên tâm hình học (Centroid) |
 | **$m_i, n_j$** | Quy mô dân số tại vùng $i$ và $j$ | Dữ liệu từ WorldPop/Tiff 1km |
@@ -29,7 +30,7 @@ Nghiên cứu đề xuất một khung phương pháp luận mới dựa trên s
 | **$\text{bin}_k$** | Dải khoảng cách thứ $k$ | Độ phân giải 1km |
 | **$P(\text{bin}_k)$** | Xác suất di chuyển thực nghiệm | Tỷ lệ chuyến đi trong dải $k$ |
 | **$N_k$** | Số lượng vùng đích trong dải $k$ | Sử dụng cho mô hình Attraction-Uniform |
-| **$\alpha, \beta, \gamma$** | Các tham số hiệu chỉnh | Sử dụng trong mô hình Gravity Parametric |
+| **$\alpha, \beta, \gamma$** | Các tham số hiệu chỉnh | Sử dụng trong mô hình Gravity |
 
 ## 4.2 Baseline 1: Gravity Models (Mô hình Trọng trường)
 Mô hình Gravity giả định luồng di chuyển tỷ lệ thuận với quy mô dân số và tỷ lệ nghịch với khoảng cách.
@@ -39,32 +40,35 @@ $$ \hat{T}_{ij} = \frac{m_i^\alpha n_j^\beta}{f(r_{ij})} $$
 
 Trong đó $f(r_{ij})$ là hàm cản trở khoảng cách (thường là $r_{ij}^\gamma$ hoặc $e^{\gamma r_{ij}}$). Các ký hiệu khác tuân theo bảng tại mục 4.1.
 
-### Thực nghiệm minh họa:
+### Ví dụ minh họa [12]:
 Xét hai cặp địa điểm có đặc điểm dân số và khoảng cách tương đồng để đánh giá độ nhạy của mô hình:
 
 *   **Cặp 1 (Bang Utah - UT):**
-    - Điểm gốc (Washington County): $m_i = 90.000$ người.
-    - Điểm đích (Davis County): $n_j = 240.000$ người.
+    - Điểm gốc (Davis County): $m_i = 90,000$ người.
+    - Điểm đích (Washington County): $n_j = 240,000$ người.
     - Khoảng cách: $r_{ij} = 447$ km.
 *   **Cặp 2 (Bang Alabama - AL):**
-    - Điểm gốc (Houston County): $m_i = 89.000$ người.
-    - Điểm đích (Madison County): $n_j = 280.000$ người.
+    - Điểm gốc (Madison County): $m_i = 89,000$ người.
+    - Điểm đích (Houston County): $n_j = 280,000$ người.
     - Khoảng cách: $r_{ij} = 410$ km.
 
 **Tham số mô hình:**
-Dựa trên việc huấn luyện từ dữ liệu thực tế cho các chuyến đi có khoảng cách $r > 119$ km, bộ tham số tối ưu được xác định như sau:
+Tham số ước lượng cho mô hình gravity
+$$[\alpha, \beta, \gamma] = \begin{cases}    [0.30, 0.64, 3.05] & \text{ khi } r > 119 \text{ km}, \\
+                            [0.24, 0.14, 0.29] & \text{ khi } r < 119 \text{ km} \end{cases}$$
+Dựa vào khoảng cách giữa điểm gốc vầ điểm đích $r > 119$ km, bộ tham số tối ưu được xác định như sau:
 - $\alpha = 0.24$
 - $\beta = 0.14$
-- $f(r_{ij}) = r_{ij}^c$ với $c = 0.29$
+- $f(r_{ij}) = r_{ij}^{\gamma}$ với $\gamma = 0.29$
 
 **Quy trình tính toán:**
 Thay các giá trị thực tế vào công thức tỷ lệ:
-- Luồng di chuyển tại Utah:
+- Ước lượng luồng di chuyển tại Utah:
   
-$$ \hat{T}_{UT} = \frac{90.000^{0.24} \times 240.000^{0.14}}{447^{0.29}} = 1.08 $$
-- Luồng di chuyển tại Alabama:
+$$ \hat{T}_{UT} = \frac{90.000^{0.24} \times 240.000^{0.14}}{447^{0.29}} = 1.08 \text{ di chuyển} $$
+- Ước lượng luồng di chuyển tại Alabama:
   
-$$ \hat{T}_{AL} = \frac{89.000^{0.24} \times 280.000^{0.14}}{410^{0.29}} = 1.12 $$
+$$ \hat{T}_{AL} = \frac{89.000^{0.24} \times 280.000^{0.14}}{410^{0.29}} = 1.12 \text{ di chuyển} $$
 
 ## 4.3 Baseline 2: Radiation Model (Mô hình Bức xạ)
 Mô hình Radiation dựa trên lý thuyết về các cơ hội xen giữa, không yêu cầu các tham số ước lượng từ dữ liệu lịch sử.
@@ -74,50 +78,68 @@ $$ \hat{T}_{ij} = O_i \frac{m_i \times n_j}{(m_i + s_{ij}) \times (m_i + n_j + s
 
 Các ký hiệu và ý nghĩa biến số tương tự quy ước tại mục 4.1.
 
-### Thực nghiệm minh họa:
+### Ví dụ minh họa:
 
-**Trường hợp 1: Bang Utah (Khu vực thưa dân)**
-- Dân số gốc ($m_i$) = 90.000
-- Dân số đích ($n_j$) = 240.000
-- Dân số xen giữa ($s_{ij}$) = $2 \times 10^6$ (2.000.000)
-- Tổng lượng người đi làm ước tính ($O_i$): $0.11 \times 90.000 = 9.900$ người.
+Theo thống kê thì $O_i = 0.11 \times m_i$
 
-**Xác suất chọn điểm đến $P_{UT}$ :**
-- Tử số: $m_i \times n_j = 90.000 \times 240.000 = 21,6 \times 10^9$
-- Mẫu số 1 ($m_i + s_{ij}$): $90.000 + 2.000.000 = 2.090.000$
-- Mẫu số 2 ($m_i + n_j + s_{ij}$): $90.000 + 240.000 + 2.000.000 = 2.330.000$
-- $P_{UT} = \frac{21,6 \times 10^9}{2.090.000 \times 2.330.000} \approx 0,00443$
+**Trường hợp 1: Bang Utah**
+- Dân số gốc (Davis County): $m_i$ = 90.000
+- Dân số đích (Washington County): $n_j$ = 240.000
+- Dân số xen giữa: $s_{ij}$ = $2 \times 10^6$ 
+- Tổng lượng di chuyển từ điểm nguồn: $O_i = 0.11 \times 90,000 = 9,900$
 
-=> Dự báo luồng di chuyển tại Utah: $\hat{T}_{UT} = 9.900 \times 0,00443 \approx 43,9$ người.
+- Xác suất chọn điểm đến $P_{UT}$:    
+$$P_{UT} = \frac{90,000 \times 240,000}{(90,000 + 2,000,000) \times (90,000 + 240,000 + 2,000,000)} \approx 0.00443$$
 
-**Trường hợp 2: Bang Alabama (Khu vực đông dân)**
-- Dân số gốc ($m_i$) = 89.000
-- Dân số đích ($n_j$) = 280.000
-- Dân số xen giữa ($s_{ij}$) = $2 \times 10^7$ (20.000.000)
-- Tổng lượng người đi làm ước tính ($O_i$): $0.11 \times 89.000 = 9.790$ người.
+Dự báo luồng di chuyển tại Utah: $\hat{T}_{UT} = 9,900 \times 0.00443 \approx 43.9$ chuyến.
 
-**Xác suất chọn điểm đến $P_{AL}$ :**
-- Tử số: $89.000 \times 280.000 = 24,92 \times 10^9$
-- Mẫu số 1 ($m_i + s_{ij}$): $89.000 + 20.000.000 = 20.089.000$
-- Mẫu số 2 ($m_i + n_j + s_{ij}$): $89.000 + 280.000 + 20.000.000 = 20.369.000$
-- $P_{AL} = \frac{24,92 \times 10^9}{20.089.000 \times 20.369.000} \approx 0,00006$
+**Trường hợp 2: Bang Alabama**
+- Dân số gốc (Madison County): $m_i$ = 89,000 người
+- Dân số đích (Houston County): $n_j$ = 280,000 người
+- Dân số xen giữa: $s_{ij}$ = $2 \times 10^7$ người
+- Tổng lượng di chuyển từ điểm nguồn: $O_i = 0.11 \times 89,000 = 9,790$ người.
 
-Dự báo luồng di chuyển tại Alabama: 
+- Xác suất chọn điểm đến $P_{AL}$ :
+$$P_{AL} = \frac{m_i \times n_j}{(m_i + s_{ij}) \times (m_i + n_j + s_{ij})} = \frac{89,000 \times 280,000}{(89,000 + 20,000,000) \times (89,000 + 280,000 + 20,000,000)} \approx 0.00006$$
 
-$$ \hat{T}_{AL} = 9.790 \times 0,00006 \approx 0,59 \text{ người} $$
+Dự báo luồng di chuyển tại Alabama: $ \hat{T}_{AL} = 9,790 \times 0.00006 \approx 0.59 \text{ chuyến} $
 
-Kết quả: mô hình radiation phản ánh tốt hơn về khác biệt quy mô dân số giữa hai vùng. Dữ liệu thực tế cho thấy:
-    $$T_{UT} = 44$$ 
-    $$T_{AL} = 6$$
+**Kết quả**:
+- Dữ liệu thực tế quan sát được:
+    $T_{UT} = 44 \text{ chuyến} $ 
+    $T_{AL} = 6 \text{ chuyến}$
+- Điều này cho thấy mô hình radiation có thể phản ánh được quy mô dân số và cơ hội xen giữa của các vùng - ảnh hưởng của không gian lân cận, tránh được việc bị phụ thuộc quá mức vào chỉ số khoảng cách. Nhờ đó cho kết quả tốt hơn mô hình gravity trong trường hợp này.
 
-## 4.4 Proposed Model: Attraction-Weighted Shell Model
+## 4.4 Probability Distribution of Trip Lengths
+Thay vì giả định một hàm suy giảm khoảng cách liên tục (như hàm Power hay Exponential), nghiên cứu này sử dụng phân bổ xác suất thực nghiệm rời rạc. 
+
+Với mỗi vùng $i$, ta xác định khoảng cách với các vùng $j$ con lại. Sau đó, các vùng $j$ được gom vào các dải khoảng cách $bin_k$ dựa trên khoảng cách từ vùng $i$ đến vùng $j$. Độ rộng mỗi $bin_k$ được chọn là 1km để số lượng bin không quá lớn tránh tình trạng có quá nhiều bin không có dữ liệu làm sai lệch thống kê. 
+
+Ví dụ: 
+- Cặp di chuyển có bán kính $r_{ij}$ = 1.1 km thì thuộc $bin_1$
+- Cặp di chuyển có bán kính $r_{ij}$ = 2.1 km thì thuộc $bin_2$
+- Cặp di chuyển có bán kính $r_{ij}$ = 3.1 km thì thuộc $bin_3$
+
+**Cách xác định xác suất cho các dải khoảng cách của mỗi điểm nguồn i**:
+
+  $$ P(\text{bin}_k) = \frac{\sum_{i,j \in \text{bin}_k} T_{ij}}{\sum_{i,j} T_{ij}}  $$
+
+Ví dụ về cách xác định xác suất cho các dải khoảng cách của mỗi điểm nguồn i:
+
+- Điểm nguồn i có tổng lượng di chuyển là $O_i$ = 1000 di chuyển
+- Trong đó có 200 chuyến đi đến $bin_1$ (1-2km), 300 chuyến đi đến $bin_2$ (2-3km), 500 chuyến đi đến $bin_3$ (3-4km)
+- Xác suất di chuyển đến $bin_1$ khi điểm xuất phát là i là $P(bin_1) = 200/1000 = 0.2$
+- Xác suất di chuyển đến $bin_2$ khi điểm xuất phát là i là $P(bin_2) = 300/1000 = 0.3$
+- Xác suất di chuyển đến $bin_3$ khi điểm xuất phát là i là $P(bin_3) = 500/1000 = 0.5$
+
+## 4.5 Proposed Model: Attraction-Weighted Shell Model
 Mô hình đề xuất hoạt động dựa trên cơ chế phân bổ hai giai đoạn (Two-step allocation):
 
 **Giai đoạn 1: Lựa chọn dải khoảng cách (Radial Shell Selection)**
-Lượng chuyến đi từ $i$ trước hết được phân bổ vào các dải khoảng cách $\text{bin}_k$ dựa trên xác suất thực nghiệm $P(\text{bin}_k)$. Điều này đảm bảo mô hình luôn tuân thủ cấu trúc chi phí khoảng cách của đô thị đó.
+Lượng chuyến đi từ $i$ trước hết được phân bổ vào các dải khoảng cách $\text{bin}_k$ dựa trên xác suất thực nghiệm $P(\text{bin}_k)$.
 
 **Giai đoạn 2: Phân bổ nội bộ dải (Intra-bin Allocation)**
-Trong mỗi dải $\text{bin}_k$, các chuyến đi được phân bổ cho các vùng đích $j$ dựa trên tỷ trọng POI của vùng đó so với tổng POI của tất cả các vùng cùng nằm trong dải.
+Trong mỗi dải $\text{bin}_k$, các chuyến đi được phân bổ cho các vùng đích $j$ dựa trên tỷ trọng POI của vùng đó so với tổng POI của tất cả các vùng cùng nằm trong cùng dải.
 
 Công thức tổng quát của mô hình **Attraction-Weighted**:
 
@@ -125,14 +147,24 @@ $$ \hat{T}_{ij} = O_{i} \times P(\text{bin}_{k}) \times \frac{A_j}{\sum_{z \in \
 
 Trong đó $k$ là dải khoảng cách chứa vùng $j$ tính từ vùng $i$ ($r_{ij} \in \text{bin}_k$).
 
-## 4.5 Probability Distribution of Trip Lengths
-Thay vì giả định một hàm suy giảm khoảng cách liên tục (như hàm Power hay Exponential), nghiên cứu này sử dụng phân bổ xác suất thực nghiệm rời rạc. 
-- **Lợi ích**: Phương pháp này khắc phục được sai số tại các khoảng cách cực ngắn (vấn đề "singularity" trong mô hình Gravity) và phản ánh chính xác các đặc điểm địa lý đặc thù của siêu đô thị (như ranh giới tự nhiên hoặc cấu trúc quy hoạch tập trung).
-- **Cách xác định**:
+Ví dụ:
+- Điểm nguồn i có tổng lượng di chuyển là $O_i$ = 1000 di chuyển
+- Xác suất di chuyển đến $bin_1$ khi điểm xuất phát là i là $P(bin_1) = 0.2$
+- Xác suất di chuyển đến $bin_2$ khi điểm xuất phát là i là $P(bin_2) = 0.3$
+- Xác suất di chuyển đến $bin_3$ khi điểm xuất phát là i là $P(bin_3) = 0.5$
+- Tổng POI của các vùng trong $bin_1$ là $A_{bin_1} = 100$
+- Vùng đích 1 thuộc $bin_1$ có POI là $A_{j1} = 20$
+- Vùng đích 2 thuộc $bin_1$ có POI là $A_{j2} = 30$
+- Vùng đích 3 thuộc $bin_1$ có POI là $A_{j3} = 50$
+- Ước lượng số di chuyển đến vùng $j =1$ là $\hat{T}_{i1}$:
 
-  $$ P(\text{bin}_k) = \frac{\sum_{i,j \in \text{bin}_k} T_{ij}}{\sum_{i,j} T_{ij}}  $$
+$$ \hat{T}_{i1} = O_{i} \times P(\text{bin}_{1}) \times \frac{A_{j1}}{A_{bin_{1}}} = 1000 \times 0.2 \times \frac{20}{100} = 40 \text{ chuyến} $$
+- Ước lượng số di chuyển đến vùng $j =2$ là $\hat{T}_{i2}$:
 
-  Mỗi bin được thiết lập với độ phân giải 1km để cân bằng giữa độ chi tiết không gian và tính ổn định thống kê.
+$$ \hat{T}_{i2} = O_{i} \times P(\text{bin}_{1}) \times \frac{A_{j2}}{A_{bin_{1}}} = 1000 \times 0.2 \times \frac{30}{100} = 60 \text{ chuyến} $$
+- Ước lượng số di chuyển đến vùng $j =3$ là $\hat{T}_{i3}$:
+
+$$ \hat{T}_{i3} = O_{i} \times P(\text{bin}_{1}) \times \frac{A_{j3}}{A_{bin_{1}}} = 1000 \times 0.2 \times \frac{50}{100} = 100 \text{ chuyến} $$
 
 # 5. Results
 Kết quả thực nghiệm cho thấy một sự phân cấp rõ rệt về hiệu suất dự báo giữa các nhóm mô hình. Phương pháp tiếp cận dựa trên khung xác suất di chuyển với các ràng buộc về khoảng cách (**Attraction-Uniform**) và trọng số tiện ích (**Attraction-Weighted**) cho kết quả tốt nhất ở cả hai thành phố.
