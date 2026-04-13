@@ -162,7 +162,7 @@ Ví dụ:
 - Xác suất di chuyển đến $bin_1$ khi điểm xuất phát là i là $P(bin_1) = 0.2$
 - Xác suất di chuyển đến $bin_2$ khi điểm xuất phát là i là $P(bin_2) = 0.3$
 - Xác suất di chuyển đến $bin_3$ khi điểm xuất phát là i là $P(bin_3) = 0.5$
-- Tổng POI của các vùng trong $bin_1$ là $A_{bin_1} = 100$
+- Tổng POI của các vùng trong $bin_1$ là $A_{bin_1} = \sum_{z \in bin_1} A_z = 100$
 - Vùng đích 1 thuộc $bin_1$ có POI là $A_{1} = 20$
 - Vùng đích 2 thuộc $bin_1$ có POI là $A_{2} = 30$
 - Vùng đích 3 thuộc $bin_1$ có POI là $A_{3} = 50$
