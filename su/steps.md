@@ -40,10 +40,10 @@
 - [x] Hiện thực mô hình radiation
 - [x] pop lấy từ file kor_pop_2025_CN_1km_R2025A_UA_v1.tif
 ### Công thức tổng quát:
-$$ T_{ij} = O_i \frac{m_i \times n_j}{(m_i + s_{ij}) \times (m_i + n_j + s_{ij})} $$
+$$ \hat{T}_{ij} = O_i \times \frac{m_i \times n_j}{(m_i + s_{ij}) \times (m_i + n_j + s_{ij})} $$
 
 Trong đó:
-- **$T_{ij}$**: Số lượng chuyến đi trung bình dự báo từ địa điểm gốc $i$ đến địa điểm đích $j$.
+- **$\hat{T}_{ij}$**: Số lượng chuyến đi trung bình dự báo từ địa điểm gốc $i$ đến địa điểm đích $j$.
 - **$O_i$**: Tổng số lượng di chuyển từ zone $i$ như trong step 3
 - **$m_i$**: Quy mô dân số tại gốc $i$.
 - **$n_j$**: Quy mô dân số tại đích $j$.
@@ -53,16 +53,17 @@ Trong đó:
 
 ## step 7: [DONE]
 - [x] Hien thuc mo hinh gravity distance decay function: power function, exponential function
-### Công thức tổng quát:
-$$ T_{ij} = \frac{m_i^\alpha n_j^\beta}{f(r_{ij})} $$
+### Công thức tổng quát (Production-Constrained):
+$$ T_{ij} = A_i \times O_i \times D_j \times f(r_{ij}) $$
 
 Trong đó:
 - **$T_{ij}$**: Số lượng cá nhân di chuyển từ địa điểm gốc $i$ đến địa điểm đích $j$ trên một đơn vị thời gian.
-- **$m_i$**: Quy mô dân số tại địa điểm gốc $i$.
-- **$n_j$**: Quy mô dân số tại địa điểm đích $j$.
-- **$r_{ij}$**: Khoảng cách vật lý giữa hai địa điểm $i$ và $j$.
-- **$\alpha$** và **$\beta$**: Các tham số điều chỉnh quy mô dân số.
-- **$f(r_{ij})$**: Hàm cản trở khoảng cách (deterrence function).
+- **$O_i$**: Tổng sản lượng (Production) di chuyển thực tế từ gốc $i$.
+- **$D_j$**: Sức hấp dẫn (Attractiveness) của điểm đích $j$: $D_j = n_j$ (dân số).
+- **$f(r_{ij})$**: Hàm cản trở khoảng cách (Power: $r_{ij}^{-\gamma}$ hoặc Exponential: $e^{-\gamma r_{ij}}$).
+- **$A_i$**: Hệ số cân bằng (Balancing Factor):
+$$ A_i = \frac{1}{\sum_{j} D_j \times f(r_{ij})} $$
+Hệ số này đảm bảo rằng $\sum_j T_{ij} = O_i$.
 
 - [x] luu ket qua hai loai mo hinh (tham so uoc luong) vao file [step7_gravity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step7_gravity_results.csv)
 
