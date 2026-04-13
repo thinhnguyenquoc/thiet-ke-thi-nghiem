@@ -249,7 +249,12 @@ Nghiên cứu đã thành công trong việc thiết lập một khung phương 
 
 Nghiên cứu này mở ra khả năng ứng dụng thực tiễn trong việc dự báo nhu cầu giao thông và quy hoạch hạ tầng tại các đô thị đang phát triển, nơi dữ liệu khảo sát thường xuyên bị thiếu hụt hoặc lạc hậu.
 
-# 8. References
+# 8. Future work
+- thay O_i bằng m_i 
+- dùng một phần data mỗi district để train, cần tính xem bao nhiêu % thì suy giảm mạnh mạng OD
+- dùng vài quận để đoán, ví dụ 2/5 quận, 3/5 quận, 4/5 quận
+
+# 9. References
 1. M. Lenormand, A. Bassolas, and J. J. Ramasco, "Systematic comparison of trip distribution laws and models," J. Transp. Geogr., vol. 51, pp. 158–169, 2016
 2. J. Wang, X. Kong, F. Xia, and L. Sun, "Urban Human Mobility: Data-Driven Modeling and Prediction," ACM SIGKDD Explor. Newsl., vol. 21, no. 1, pp. 1–19, 2019
 3. M. Luca, G. Barlacchi, B. Lepri, and L. Pappalardo, "A Survey on Deep Learning for Human Mobility," ACM Comput. Surv., vol. 55, no. 1, pp. 1–44, 2021
