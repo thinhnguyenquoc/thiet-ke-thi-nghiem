@@ -15,8 +15,15 @@ The following table synthesizes the **Origin-Averaged CPC** across Singapore, Se
 | **Attraction-Weighted (POI)** | **0.7100** | Optimization | Shells + POI Attraction |
 | **Exponential Decay (PC)** | 0.6402 | Parametric | Production-Constrained |
 | **Power Decay (PC)** | 0.6163 | Parametric | Production-Constrained |
-| **Radiation (Population)** | 0.4421 | Interv. Opp. | Opportunities (Pop) |
+| **Radiation (Pop)** | 0.4421 | Interv. Opp. | Opportunities (Pop) |
 | **Radiation (POI)** | 0.4117 | Interv. Opp. | Opportunities (POI) |
+
+### Global Performance Visualization
+![Average CPC 50 Cities](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/avg_cpc_50_cities.png)
+*Fig 1: Average CPC performance across 50 US cities.*
+
+![CPC Distribution 50 Cities](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/cpc_distribution_50_cities.png)
+*Fig 2: CPC score distribution showing the high stability of Shell models.*
 
 > [!IMPORTANT]
 > The **Production-Constrained (PC)** methodology significantly revitalized the performance of parametric models, with Global Avg CPC increasing from ~0.30 to >0.60. However, Shell models remain the gold standard for high-fidelity flow reconstruction.

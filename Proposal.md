@@ -254,6 +254,18 @@ Bảng dưới đây tóm tắt chỉ số CPC (trung bình theo điểm gốc) 
 | **Austin** | 0.4263 | **0.7791** | 0.6649 (Power) | 0.4833 |
 | **Baltimore** | **0.7172** | 0.6958 | 0.6235 (Power) | 0.4682 |
 
+#### 5.3.4 Phân tích tổng hợp 50 thành phố Hoa Kỳ
+Nghiên cứu mở rộng trên 50 thành phố Hoa Kỳ cho thấy một quy luật nhất quán về hiệu suất giữa các mô hình:
+
+![Average CPC 50 Cities](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/avg_cpc_50_cities.png)
+*Hình 5: So sánh CPC trung bình của 6 mô hình trên 50 thành phố Hoa Kỳ.*
+
+- **Ưu thế tuyệt đối của Shell Models**: Với CPC trung bình đạt **0.733**, các mô hình Shell vượt trội hơn hẳn so với Radiation (**55.8%** cải thiện) và Gravity tham số (**17.0%** cải thiện).
+- **Tính ổn định**: Biểu đồ phân bổ (Hình 6) cho thấy các mô hình Attraction-Uniform/Weighted có độ biến thiên thấp nhất, chứng minh khả năng thích ứng cao với nhiều loại hình cấu trúc đô thị.
+
+![CPC Distribution 50 Cities](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/cpc_distribution_50_cities.png)
+*Hình 6: Phân bổ chỉ số CPC của các mô hình trên 50 tập dữ liệu thành phố.*
+
 ### 5.4 Các phát hiện chính
 - **Tính phổ quát của cấu trúc Shell**: Việc sử dụng các dải khoảng cách thực nghiệm (Shells) giúp đạt CPC trung bình toàn cầu là **0.74**, vượt trội hơn hẳn các hàm suy giảm liên tục truyền thống.
 - **Sự hồi sinh của mô hình Gravity**: Nhờ áp dụng **Ràng buộc điểm nguồn (Production-Constrained)**, CPC của các mô hình Gravity đã tăng từ mức ~0.30 lên trung bình **0.64**, chứng minh hiệu quả của việc kiểm soát sản lượng tại các khu dân cư.
