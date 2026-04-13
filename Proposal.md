@@ -61,12 +61,10 @@ Dựa trên việc huấn luyện từ dữ liệu thực tế cho các chuyến
 Thay các giá trị thực tế vào công thức tỷ lệ:
 - Luồng di chuyển tại Utah:
   
-$$ T_{UT} \propto \frac{90.000^{0.24} \times 240.000^{0.14}}{447^{0.29}} = 1 $$
+$$ \hat{T}_{UT} = \frac{90.000^{0.24} \times 240.000^{0.14}}{447^{0.29}} = 1.08 $$
 - Luồng di chuyển tại Alabama:
   
-$$ T_{AL} \propto \frac{89.000^{0.24} \times 280.000^{0.14}}{410^{0.29}} = 1 $$
-
-**Kết quả:** Do dân số và khoảng cách của hai cặp gần như tương đương, mô hình dự báo số lượng di chuyển cho cả hai trường hợp đều bằng **1 người**, cho thấy mô hình Gravity gặp khó khăn trong việc phản ánh sự khác biệt thực tế giữa các vùng địa lý khác nhau.
+$$ \hat{T}_{AL} = \frac{89.000^{0.24} \times 280.000^{0.14}}{410^{0.29}} = 1.12 $$
 
 ## 4.3 Baseline 2: Radiation Model (Mô hình Bức xạ)
 Mô hình Radiation dựa trên lý thuyết về các cơ hội xen giữa, không yêu cầu các tham số ước lượng từ dữ liệu lịch sử.
