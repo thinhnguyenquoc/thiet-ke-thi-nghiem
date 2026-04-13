@@ -53,15 +53,17 @@ Trong đó:
 
 ## step 7: [DONE]
 - [x] Hiện thực mô hình gravity distance decay function (Parametric)
-### Công thức tổng quát:
-$$ T_{ij} = \frac{m_i^\alpha n_j^\beta}{f(r_{ij})} $$
+### Công thức tổng quát (Production-Constrained):
+$$ T_{ij} = A_i \times O_i \times D_j \times f(r_{ij}) $$
 
 Trong đó:
-- **$T_{ij}$**: Số lượng cá nhân di chuyển từ địa điểm gốc $i$ đến địa điểm đích $j$.
-- **$m_i$**: Quy mô dân số tại địa điểm gốc $i$.
-- **$n_j$**: Quy mô dân số tại địa điểm đích $j$.
-- **$\alpha$** và **$\beta$**: Các tham số điều chỉnh quy mô dân số.
-- **$f(r_{ij})$**: Hàm cản trở khoảng cách (Power / Exponential).
+- **$T_{ij}$**: Số lượng cá nhân di chuyển từ địa điểm gốc $i$ đến địa điểm đích $j$ trên một đơn vị thời gian.
+- **$O_i$**: Tổng sản lượng (Production) di chuyển thực tế từ gốc $i$.
+- **$D_j$**: Sức hấp dẫn (Attractiveness) của điểm đích $j$: $D_j = n_j$ (dân số).
+- **$f(r_{ij})$**: Hàm cản trở khoảng cách (Power: $r_{ij}^{-\gamma}$ hoặc Exponential: $e^{-\gamma r_{ij}}$).
+- **$A_i$**: Hệ số cân bằng (Balancing Factor):
+$$ A_i = \frac{1}{\sum_{j} D_j \times f(r_{ij})} $$
+Hệ số này đảm bảo rằng $\sum_j T_{ij} = O_i$.
 
 - [x] luu ket qua tham so uoc luong vao file [step7_gravity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step7_gravity_results.csv)
 

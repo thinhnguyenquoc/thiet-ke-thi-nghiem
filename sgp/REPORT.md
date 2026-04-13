@@ -33,8 +33,8 @@ The results demonstrate a clear hierarchy where discrete structural models outpe
 | :--- | :--- | :--- | :--- | :--- |
 | **Radiation (Pop)** | 0.1822 | -9.75 | 107.83 | 625.39 |
 | **Radiation (POI)** | 0.2681 | -8.95 | 110.10 | 697.22 |
-| **Exponential Decay** | 0.2628 | -0.09 | 69.54 | 258.28 |
-| **Power Decay** | 0.3052 | -0.22 | 67.28 | 249.59 |
+| **Exponential Decay** | **0.4948** | **0.04** | **70.50** | **195.81** |
+| **Power Decay** | **0.4449** | **0.07** | **78.31** | **226.67** |
 | **Attraction-Uniform**| 0.6027 | 0.53 | 57.26 | 146.78 |
 | **Attraction-Weighted**| **0.6764** | **0.63** | **44.96** | **124.02** |
 
