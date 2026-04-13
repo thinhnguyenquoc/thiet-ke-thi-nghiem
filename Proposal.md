@@ -91,7 +91,7 @@ Theo thống kê thì $O_i = 0.11 \times m_i$
 - Xác suất chọn điểm đến $P_{UT}$:    
 $$P_{UT} = \frac{90,000 \times 240,000}{(90,000 + 2,000,000) \times (90,000 + 240,000 + 2,000,000)} \approx 0.00443$$
 
-Dự báo luồng di chuyển tại Utah: $\hat{T}_{UT} = 9,900 \times 0.00443 \approx 43.9$ chuyến.
+Dự báo luồng di chuyển tại Utah: $\hat{T}_{UT} = 9,900 \times 0.00443 \approx 43.9$ di chuyển.
 
 **Trường hợp 2: Bang Alabama**
 - Dân số gốc (Madison County): $m_i$ = 89,000 người
@@ -102,12 +102,12 @@ Dự báo luồng di chuyển tại Utah: $\hat{T}_{UT} = 9,900 \times 0.00443 \
 - Xác suất chọn điểm đến $P_{AL}$ :
 $$P_{AL} = \frac{m_i \times n_j}{(m_i + s_{ij}) \times (m_i + n_j + s_{ij})} = \frac{89,000 \times 280,000}{(89,000 + 20,000,000) \times (89,000 + 280,000 + 20,000,000)} \approx 0.00006$$
 
-Dự báo luồng di chuyển tại Alabama: $ \hat{T}_{AL} = 9,790 \times 0.00006 \approx 0.59 \text{ chuyến} $
+Dự báo luồng di chuyển tại Alabama: $ \hat{T}_{AL} = 9,790 \times 0.00006 \approx 0.59 \text{ di chuyển} $
 
 **Kết quả**:
 - Dữ liệu thực tế quan sát được:
-    $T_{UT} = 44 \text{ chuyến} $ 
-    $T_{AL} = 6 \text{ chuyến}$
+    $T_{UT} = 44 \text{ di chuyển} $ 
+    $T_{AL} = 6 \text{ di chuyển}$
 - Điều này cho thấy mô hình radiation có thể phản ánh được quy mô dân số và cơ hội xen giữa của các vùng - ảnh hưởng của không gian lân cận, tránh được việc bị phụ thuộc quá mức vào chỉ số khoảng cách. Nhờ đó cho kết quả tốt hơn mô hình gravity trong trường hợp này.
 
 ## 4.4 Probability Distribution of Trip Lengths
@@ -153,23 +153,34 @@ Ví dụ:
 - Xác suất di chuyển đến $bin_2$ khi điểm xuất phát là i là $P(bin_2) = 0.3$
 - Xác suất di chuyển đến $bin_3$ khi điểm xuất phát là i là $P(bin_3) = 0.5$
 - Tổng POI của các vùng trong $bin_1$ là $A_{bin_1} = 100$
-- Vùng đích 1 thuộc $bin_1$ có POI là $A_{j1} = 20$
-- Vùng đích 2 thuộc $bin_1$ có POI là $A_{j2} = 30$
-- Vùng đích 3 thuộc $bin_1$ có POI là $A_{j3} = 50$
-- Ước lượng số di chuyển đến vùng $j =1$ là $\hat{T}_{i1}$:
+- Vùng đích 1 thuộc $bin_1$ có POI là $A_{1} = 20$
+- Vùng đích 2 thuộc $bin_1$ có POI là $A_{2} = 30$
+- Vùng đích 3 thuộc $bin_1$ có POI là $A_{3} = 50$
+- Ước lượng số di chuyển đến vùng $j=1$ là $\hat{T}_{i1}$:
 
-$$ \hat{T}_{i1} = O_{i} \times P(\text{bin}_{1}) \times \frac{A_{j1}}{A_{bin_{1}}} = 1000 \times 0.2 \times \frac{20}{100} = 40 \text{ chuyến} $$
-- Ước lượng số di chuyển đến vùng $j =2$ là $\hat{T}_{i2}$:
+$$ \hat{T}_{i1} = O_{i} \times P(\text{bin}_{1}) \times \frac{A_{1}}{A_{bin_{1}}} = 1000 \times 0.2 \times \frac{20}{100} = 40 \text{ di chuyển} $$
+- Ước lượng số di chuyển đến vùng $j=2$ là $\hat{T}_{i2}$:
 
-$$ \hat{T}_{i2} = O_{i} \times P(\text{bin}_{1}) \times \frac{A_{j2}}{A_{bin_{1}}} = 1000 \times 0.2 \times \frac{30}{100} = 60 \text{ chuyến} $$
-- Ước lượng số di chuyển đến vùng $j =3$ là $\hat{T}_{i3}$:
+$$ \hat{T}_{i2} = O_{i} \times P(\text{bin}_{1}) \times \frac{A_{2}}{A_{bin_{1}}} = 1000 \times 0.2 \times \frac{30}{100} = 60 \text{ di chuyển} $$
+- Ước lượng số di chuyển đến vùng $j=3$ là $\hat{T}_{i3}$:
 
-$$ \hat{T}_{i3} = O_{i} \times P(\text{bin}_{1}) \times \frac{A_{j3}}{A_{bin_{1}}} = 1000 \times 0.2 \times \frac{50}{100} = 100 \text{ chuyến} $$
+$$ \hat{T}_{i3} = O_{i} \times P(\text{bin}_{1}) \times \frac{A_{3}}{A_{bin_{1}}} = 1000 \times 0.2 \times \frac{50}{100} = 100 \text{ di chuyển} $$
 
 # 5. Results
-Kết quả thực nghiệm cho thấy một sự phân cấp rõ rệt về hiệu suất dự báo giữa các nhóm mô hình. Phương pháp tiếp cận dựa trên khung xác suất di chuyển với các ràng buộc về khoảng cách (**Attraction-Uniform**) và trọng số tiện ích (**Attraction-Weighted**) cho kết quả tốt nhất ở cả hai thành phố.
+Thực nghiệm được tiến hành trên hai đô thị có mật độ dân cư và tiện ích cao bậc nhất Châu Á là Singapore và Seoul. Phương pháp tiếp cận dựa trên khung xác suất di chuyển với các ràng buộc về khoảng cách (**Attraction-Uniform**) và trọng số tiện ích (**Attraction-Weighted**) cho kết quả tốt nhất ở cả hai thành phố.
 
-### 5.1 Bảng so sánh hiệu suất tổng hợp
+### 5.1 Đặc tả dữ liệu thực nghiệm
+Dưới đây là các thông số đặc trưng của tập dữ liệu sử dụng cho hai thành phố:
+
+| Thông số | **Singapore (SGP)** | **Seoul (SU)** |
+| :--- | :--- | :--- |
+| **Số lượng vùng (Subzones)** | 323 khu vực | 421 khu vực |
+| **Tổng dân số (WorldPop)** | **5.847.722** | **9.471.043** |
+| **Hệ tọa độ (CRS)** | EPSG:3414 (SVY21) | EPSG:5179 (UTM-K) |
+| **Dữ liệu POI (OSM)** | ~45,000 tiện ích | 101,185 tiện ích |
+| **Dữ liệu di chuyển** | Ma trận OD thực tế quan sát theo tuần | Ma trận OD thực tế quan sát theo tuần |
+
+### 5.2 Bảng so sánh hiệu suất tổng hợp
 Bảng dưới đây trình bày các thông số so sánh giữa 6 mô hình nghiên cứu tại Singapore và Seoul:
 
 | Phiên bản mô hình | Phân loại | **Singapore (CPC)** | **Seoul (CPC)** | **MAE** (Seoul) | **RMSE** (Seoul) |
