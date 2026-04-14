@@ -444,8 +444,54 @@ Thử nghiệm **Partial-Training Shell** được mở rộng với dải lấy
 2.  **Global Law hữu ích nhưng không thay thế được Localized Profiles**: Mặc dù quy luật toàn cục ($\bar{P}(bin_k)$) vẫn vượt trội hơn mô hình Radiation truyền thống (SU: 0.54 vs 0.30; SGP: 0.28 vs 0.18), sự chênh lệch đáng kể so với Localized Baseline chứng minh rằng hành vi di chuyển có tính Heterogeneous (dị biệt) cao tùy thuộc vào vị trí khởi hành. 
 3.  **Đặc thù đô thị**: Seoul thể hiện tính đồng nhất cao hơn Singapore khi áp dụng quy luật toàn cục. Tại Singapore, sự phụ thuộc vào các hồ sơ cục bộ (Origin-specific profiles) là yếu tố sống còn để đạt độ chính xác cao, điều này có thể giải thích bởi cấu trúc quy hoạch chức năng cực kỳ tập trung của đảo quốc.
 
-![CPC Growth Curve](step10_cpc_growth_curve.png)
-*Hình 7: Đường cong tăng trưởng độ chính xác (CPC) theo tỷ lệ phần trăm vùng huấn luyện.*
+![Comprehensive Sensitivity Curve](su/step15_comprehensive_sensitivity.png)
+*Hình 7: Đường cong độ nhạy toàn diện (Sensitivity Curve) từ 1% đến 100% dữ liệu huấn luyện (Kết hợp thử nghiệm Distributed Sampling).*
+
+#### 5.5.2 Thử nghiệm Phân cụm Không gian (Spatial Clustering Experiment)
+Để đánh giá khả năng suy rộng thực tế khi dữ liệu bị thiếu hụt theo vùng địa lý (ví dụ: một quận hoàn toàn không có dữ liệu), chúng tôi thực hiện chia 421 subzones của Seoul thành **10 cụm (clusters)** có kích thước tương đương và đảm bảo tính liền kề về mặt địa lý bằng thuật toán K-Means trên tọa độ centroid.
+
+Thử nghiệm **Leave-One-Cluster-Out (LOCO)** được thực hiện bằng cách huấn luyện quy luật di chuyển trên 9 cụm và kiểm tra độ chính xác (CPC) trên cụm còn lại.
+
+| Fold (Cluster) | Số Subzones | CPC (Validation) |
+| :--- | :--- | :--- |
+| Cluster 1 | 51 | 0.7299 |
+| Cluster 2 | 52 | 0.7282 |
+| Cluster 3 | 35 | 0.7270 |
+| Cluster 4 | 36 | 0.7314 |
+| Cluster 5 | 52 | 0.7116 |
+| Cluster 6 | 38 | 0.6938 |
+| Cluster 7 | 52 | 0.7244 |
+| Cluster 8 | 41 | 0.7367 |
+| Cluster 9 | 30 | 0.7129 |
+| Cluster 10 | 34 | 0.7386 |
+| **Trung bình (Mean)** | **42** | **0.7235** |
+
+![Seoul Spatial Clusters](su/step11_spatial_clusters.png)
+*Hình 8: Phân chia Seoul thành 10 cụm không gian liền kề phục vụ thử nghiệm kiểm chứng chéo.*
+
+**Nhận xét**: Kết quả CPC trung bình **0.7235** là cực kỳ ấn tượng, chỉ thấp hơn kết quả huấn luyện đầy đủ (0.76) khoảng 5%. Điều này khẳng định rằng quy luật di chuyển phụ thuộc quy mô có tính phổ quát rất cao trong cùng một đô thị; tri thức chuyển giao từ các vùng khác hoàn toàn có thể dùng để phục hồi luồng di chuyển cho một vùng mới mà không cần dữ liệu lịch sử tại chỗ.
+
+#### 5.5.3 Thử nghiệm Quy luật theo Cụm (Intra-District Law)
+Để kiểm tra xem liệu một quy luật di chuyển được tinh chỉnh riêng cho từng vùng (District-tailored law) có mang lại sự cải thiện đáng kể so với quy luật chung của thành phố hay không, chúng tôi áp dụng xác suất $P(bin_k)$ được tính toán từ chính các subzone trong cùng một cụm để dự báo.
+
+| Folk (Cluster) | CPC (Localized Rule) |
+| :--- | :--- |
+| Cluster 1 | 0.7341 |
+| Cluster 2 | 0.7413 |
+| Cluster 3 | 0.7315 |
+| Cluster 4 | 0.7404 |
+| Cluster 5 | 0.7191 |
+| Cluster 6 | 0.6999 |
+| Cluster 7 | 0.7294 |
+| Cluster 8 | 0.7396 |
+| Cluster 9 | 0.7144 |
+| Cluster 10 | 0.7450 |
+| **Trung bình (Mean)** | **0.7295** |
+
+**So sánh và thảo luận**:
+- **Intra-District Law (0.7295)** vs **Global Seoul Law (0.54)**: Việc địa phương hóa quy luật ở cấp độ cụm (district) giúp tăng độ chính xác lên đáng kể so với việc dùng một quy luật duy nhất cho toàn thành phố.
+- **Intra-District (0.73) vs LOCO Cross-Validation (0.72)**: Hiệu suất khi dùng dữ liệu nội vùng chỉ cao hơn một chút so với khi dùng dữ liệu từ các vùng khác. Điều này cho thấy các "quy luật di chuyển dải" (Shell laws) tại Seoul rất bền vững và ít biến động giữa các khu vực địa lý khác nhau.
+- **Khoảng cách so với Localized Profile (0.76)**: Cả hai thử nghiệm trên vẫn chưa bắt kịp độ chính xác của hồ sơ di chuyển riêng biệt cho từng điểm xuất phát cụ thể. Điều này gợi ý rằng sự biến thiên hữu hiệu nhất nằm ở mức độ từng điểm đơn lẻ (Origin-specific) hơn là mức độ khu vực (Region-specific).
 
 # 6. Discussion
 Phân tích kết quả thực nghiệm mở rộng trên 52 thành phố (bao gồm Singapore, Seoul và 50 thành phố Hoa Kỳ) mang lại những thảo luận quan trọng về các quy luật di chuyển đô thị hiện đại:

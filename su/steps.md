@@ -82,3 +82,36 @@ Hệ số này đảm bảo rằng $\sum_j T_{ij} = O_i$.
 - Tìm ra tỉ lệ phần trăm vùng khởi hành tối thiểu  CPC không còn cái thiện trên 0.5% so với full-training
 - hãy vẽ biểu đồ đường cong tăng trưởng độ chính xác CPC theo tỉ lệ phần trăm vùng khởi hành
 - [x] Lưu kết quả đánh giá vào file [step10_partial_training_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step10_partial_training_results.csv).
+
+## step 11: [DONE]
+- [x] Chia 421 subzones của Seoul thành 10 nhóm (clusters) có kích thước tương đương và liền kề địa lý.
+- [x] Sử dụng thuật toán K-Means trên tọa độ centroid để đảm bảo tính nén (compactness) của các cụm.
+- [x] Vẽ bản đồ phân cụm không gian ([step11_spatial_clusters.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step11_spatial_clusters.png))
+- [x] Lưu kết quả đánh giá chi tiết vào file [step11_spatial_grouping_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step11_spatial_grouping_results.csv).
+- **Kết quả**: CPC trung bình đạt **0.7235**, khẳng định khả năng suy rộng không gian mạnh mẽ của mô hình.
+## step 12: [DONE]
+- [x] Tính toán xác suất di chuyển $P(bin_k)$ riêng biệt cho từng cụm (Intra-District Law).
+- [x] Sử dụng quy luật theo cụm để dự báo luồng di chuyển cho chính các subzone trong cụm đó.
+- [x] Đánh giá độ chính xác (CPC) để so sánh hiệu quả giữa quy luật cấp thành phố, cấp cụm và cấp zone.
+- [x] Lưu kết quả vào file [step12_district_laws_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step12_district_laws_results.csv).
+- **Kết quả**: CPC trung bình đạt **0.7295**. 
+
+## step 13: [DONE]
+- [x] Thực hiện thử nghiệm **Phân tích độ nhạy theo mẫu phân tán (Distributed Sensitivity Analysis)**.
+- [x] Lấy mẫu R% subzones đồng thời từ mỗi cụm trong 10 cụm không gian (đảm bảo mẫu phân tán toàn thành phố).
+- [x] Thử nghiệm với các dải tỷ lệ lấy mẫu từ 90% xuống đến 10%.
+- [x] Thực hiện 20 lần lặp cho mỗi tỷ lệ để lấy giá trị trung bình và sai số.
+- [x] Sử dụng quy luật trung bình từ các mẫu phân tán để dự báo OD cho **Toàn bộ Seoul**.
+- [x] Vẽ biểu đồ đường cong độ nhạy ([step13_sensitivity_curve.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step13_sensitivity_curve.png)).
+- [x] Lưu kết quả chi tiết vào file [step13_subzone_sensitivity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step13_subzone_sensitivity_results.csv).
+- **Kết quả**: CPC chỉ giảm cực nhẹ (từ 0.7259 xuống 0.7248) ngay cả khi chỉ sử dụng 10% dữ liệu phân tán, khẳng định tính bão hòa thông tin nhanh chóng của quy luật di chuyển.
+
+## step 14: [DONE]
+- [x] làm như step 13 nhưng tỉ lệ dữ liệu từ 1% đến 9%
+- [x] vẽ biểu đồ suy giảm CPC.
+- [x] luu ket qua vao file [step14_subzone_sensitivity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step14_subzone_sensitivity_results.csv).
+
+## step 15: [DONE]
+- [x] Tổng hợp kết quả từ Step 13 và Step 14.
+- [x] Vẽ biểu đồ đường cong độ nhạy toàn diện ([step15_comprehensive_sensitivity.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step15_comprehensive_sensitivity.png)) sử dụng thang đo Logarithmic cho trục X.
+- [x] Biểu đồ cho thấy sự ổn định của quy luật di chuyển dải (Shell Law) trên toàn bộ dải lấy mãu từ 1% đến 90%.

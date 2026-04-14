@@ -87,3 +87,22 @@ Hệ số này đảm bảo rằng $\sum_j T_{ij} = O_i$.
 - [x] **Tỷ lệ tối thiểu**: Khoảng **2%** số lượng vùng khởi hành là đủ để mô hình đạt độ chính xác tương đương với quy luật toàn cục 100%. Mặc dù thấp hơn so với mô hình Localized (0.67), nhưng mô hình toàn cục Shell vẫn duy trì tính ổn định vượt trội so với Radiation.
 - [x] Vẽ biểu đồ đường cong tăng trưởng độ chính xác tại [step10_cpc_growth_curve.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step10_cpc_growth_curve.png).
 - [x] Lưu kết quả đánh giá vào file [step10_partial_training_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step10_partial_training_results.csv).
+## step 11: [DONE]
+- [x] Chia Singapore thành 10 cụm (clusters) không gian liền kề bằng K-Means.
+- [x] Thực hiện thử nghiệm **Leave-One-Cluster-Out (LOCO) cross-validation**.
+- [x] Huấn luyện trên 9 cụm và kiểm tra trên cụm thứ 10.
+- [x] **Kết quả**: CPC trung bình đạt **0.5572**. Kết quả này cao vượt trội so với quy luật toàn cục ngẫu nhiên ở step 10, chứng tỏ tầm quan trọng của chiến lược lấy mẫu phân tán.
+- [x] Vẽ bản đồ phân cụm ([step11_spatial_clusters.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step11_spatial_clusters.png)).
+
+## step 12: [DONE]
+- [x] Đánh giá quy luật di chuyển nội vùng (Intra-District Law).
+- [x] Sử dụng dữ liệu của chính cụm đó để huấn luyện và dự báo cho các subzone thuộc cụm.
+- [x] **Kết quả**: CPC trung bình đạt **0.5678**.
+
+## step 13: [DONE]
+- [x] Thực hiện **Phân tích độ nhạy toàn diện** (Comprehensive Sensitivity Analysis) trên dải lấy mẫu từ 1% đến 90%.
+- [x] Lấy mẫu đồng thời từ 10 cụm địa lý rải rác.
+- [x] Thực hiện 20 lần lặp cho mỗi tỷ lệ để lấy giá trị trung bình.
+- [x] **Kết quả**: CPC duy trì cực kỳ ổn định ở mức **0.542 - 0.549**, khẳng định tính phổ quát của quy luật Shell Law ngay cả khi dữ liệu cực kỳ thưa thớt (1% subzones).
+- [x] Vẽ biểu đồ đường cong độ nhạy ([step13_sensitivity_curve.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step13_sensitivity_curve.png)).
+- [x] Lưu kết quả vào file [step13_subzone_sensitivity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step13_subzone_sensitivity_results.csv).
