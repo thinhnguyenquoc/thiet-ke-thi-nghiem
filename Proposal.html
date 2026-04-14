@@ -268,6 +268,7 @@ Trong mỗi dải <span class="katex"><span class="katex-mathml"><math xmlns="ht
 <h1 id="5-results">5. Results </h1>
 <p>Thực nghiệm được tiến hành trên hai đô thị có mật độ dân cư và tiện ích cao bậc nhất Châu Á là Singapore và Seoul. Phương pháp tiếp cận dựa trên khung xác suất di chuyển với các ràng buộc về khoảng cách (<strong>Attraction-Uniform</strong>) và trọng số tiện ích (<strong>Attraction-Weighted</strong>) cho kết quả tốt nhất ở cả hai thành phố.</p>
 <h3 id="51-đặc-tả-dữ-liệu-thực-nghiệm">5.1 Đặc tả dữ liệu thực nghiệm </h3>
+<h4 id="511-singapore-và-seoul">5.1.1 Singapore và Seoul </h4>
 <p>Dưới đây là các thông số đặc trưng của tập dữ liệu sử dụng cho hai thành phố:</p>
 <table>
 <thead>
@@ -305,6 +306,24 @@ Trong mỗi dải <span class="katex"><span class="katex-mathml"><math xmlns="ht
 </tr>
 </tbody>
 </table>
+<h4 id="512-50-thành-phố-hoa-kỳ-usa">5.1.2 50 thành phố Hoa Kỳ (USA) </h4>
+<p>Để đánh giá tính phổ quát và khả năng thích ứng của mô hình trên các cấu trúc đô thị khác nhau, nghiên cứu mở rộng quy mô thực nghiệm trên 50 thành phố lớn tại Hoa Kỳ:</p>
+<ul>
+<li><strong>Đơn vị phân tích</strong>: Sử dụng các đơn vị giải thửa dân số (<strong>Census Tracts</strong>) làm đơn vị phân vùng không gian.</li>
+<li><strong>Quy mô dữ liệu</strong>:
+<ul>
+<li>Tổng số thành phố: 50 đô thị loại lớn và trung bình.</li>
+<li>Số lượng vùng (Tracts): Dao động trung bình từ 150 đến 500 vùng mỗi thành phố (ví dụ: Washington DC: 179, Fort Worth: 357, Miami: 519).</li>
+</ul>
+</li>
+<li><strong>Các thành phần dữ liệu</strong>:
+<ul>
+<li><strong>POI</strong>: Trích xuất từ OpenStreetMap với đầy đủ các phân nhóm tiện ích đô thị.</li>
+<li><strong>Hạ tầng</strong>: Tích hợp mạng lưới đường bộ và dữ liệu giao thông công cộng (GTFS).</li>
+<li><strong>Lưu lượng di chuyển</strong>: Ma trận OD thực tế được tổng hợp từ dữ liệu di động ẩn danh quy mô lớn, phản ánh cấu trúc di chuyển đặc trưng của Bắc Mỹ.</li>
+</ul>
+</li>
+</ul>
 <h3 id="52-đặc-tả-các-mô-hình-thực-nghiệm">5.2 Đặc tả các mô hình thực nghiệm </h3>
 <p>Nghiên cứu thực hiện so sánh đối chiếu 6 biến thể mô hình để đánh giá ảnh hưởng của cấu trúc không gian và dữ liệu tiện ích. Ràng buộc dữ lệu dầu vào sử dụng ràng buộc Production-Constrained để kiểm tra mang tính công bằng cho các mô hình.</p>
 <ol>
@@ -458,8 +477,10 @@ Hệ số này đảm bảo rằng tổng xác suất di chuyển đến tất c
 <th style="text-align:left">Thành phố</th>
 <th style="text-align:left"><strong>Attraction-Weighted</strong></th>
 <th style="text-align:left"><strong>Attraction-Uniform</strong></th>
-<th style="text-align:left"><strong>Mô hình PC tốt nhất</strong></th>
+<th style="text-align:left"><strong>Exponential Decay</strong></th>
+<th style="text-align:left"><strong>Power Decay</strong></th>
 <th style="text-align:left"><strong>Radiation (Pop)</strong></th>
+<th style="text-align:left"><strong>Radiation (POI)</strong></th>
 </tr>
 </thead>
 <tbody>
@@ -467,351 +488,451 @@ Hệ số này đảm bảo rằng tổng xác suất di chuyển đến tất c
 <td style="text-align:left">Albuquerque</td>
 <td style="text-align:left">0.7889</td>
 <td style="text-align:left"><strong>0.7949</strong></td>
-<td style="text-align:left">0.6984 (Power)</td>
+<td style="text-align:left">0.6806</td>
+<td style="text-align:left">0.6984</td>
 <td style="text-align:left">0.4895</td>
+<td style="text-align:left">0.4502</td>
 </tr>
 <tr>
 <td style="text-align:left">Arlington</td>
 <td style="text-align:left"><strong>0.8282</strong></td>
 <td style="text-align:left">0.8263</td>
-<td style="text-align:left">0.7479 (Exp)</td>
+<td style="text-align:left">0.7479</td>
+<td style="text-align:left">0.6930</td>
 <td style="text-align:left">0.6069</td>
+<td style="text-align:left">0.5840</td>
 </tr>
 <tr>
 <td style="text-align:left">Atlanta</td>
 <td style="text-align:left"><strong>0.7565</strong></td>
 <td style="text-align:left">0.7558</td>
-<td style="text-align:left">0.6775 (Exp)</td>
+<td style="text-align:left">0.6775</td>
+<td style="text-align:left">0.6587</td>
 <td style="text-align:left">0.5400</td>
+<td style="text-align:left">0.5029</td>
 </tr>
 <tr>
 <td style="text-align:left">Austin</td>
 <td style="text-align:left">0.4263</td>
 <td style="text-align:left"><strong>0.7791</strong></td>
-<td style="text-align:left">0.6649 (Power)</td>
+<td style="text-align:left">0.6584</td>
+<td style="text-align:left">0.6649</td>
 <td style="text-align:left">0.4833</td>
+<td style="text-align:left">0.1905</td>
 </tr>
 <tr>
 <td style="text-align:left">Baltimore</td>
 <td style="text-align:left"><strong>0.7172</strong></td>
 <td style="text-align:left">0.6958</td>
-<td style="text-align:left">0.6235 (Power)</td>
+<td style="text-align:left">0.6180</td>
+<td style="text-align:left">0.6235</td>
 <td style="text-align:left">0.4681</td>
+<td style="text-align:left">0.4632</td>
 </tr>
 <tr>
 <td style="text-align:left">Boston</td>
 <td style="text-align:left">0.6109</td>
 <td style="text-align:left"><strong>0.6840</strong></td>
-<td style="text-align:left">0.6320 (Power)</td>
+<td style="text-align:left">0.6306</td>
+<td style="text-align:left">0.6320</td>
 <td style="text-align:left">0.4525</td>
+<td style="text-align:left">0.3930</td>
 </tr>
 <tr>
 <td style="text-align:left">Charlotte</td>
 <td style="text-align:left">0.5883</td>
 <td style="text-align:left"><strong>0.7847</strong></td>
-<td style="text-align:left">0.6321 (Exp)</td>
+<td style="text-align:left">0.6321</td>
+<td style="text-align:left">0.6045</td>
 <td style="text-align:left">0.4846</td>
+<td style="text-align:left">0.3206</td>
 </tr>
 <tr>
 <td style="text-align:left">Chicago</td>
 <td style="text-align:left"><strong>0.6831</strong></td>
 <td style="text-align:left">0.6522</td>
-<td style="text-align:left">0.4136 (Exp)</td>
+<td style="text-align:left">0.4136</td>
+<td style="text-align:left">0.3546</td>
 <td style="text-align:left">0.4129</td>
+<td style="text-align:left">0.4038</td>
 </tr>
 <tr>
 <td style="text-align:left">Colorado Springs</td>
 <td style="text-align:left"><strong>0.8266</strong></td>
 <td style="text-align:left">0.8192</td>
-<td style="text-align:left">0.7376 (Power)</td>
+<td style="text-align:left">0.7094</td>
+<td style="text-align:left">0.7376</td>
 <td style="text-align:left">0.5139</td>
+<td style="text-align:left">0.4871</td>
 </tr>
 <tr>
 <td style="text-align:left">Columbus</td>
 <td style="text-align:left">0.6701</td>
 <td style="text-align:left"><strong>0.7509</strong></td>
-<td style="text-align:left">0.6237 (Power)</td>
+<td style="text-align:left">0.6196</td>
+<td style="text-align:left">0.6237</td>
 <td style="text-align:left">0.5153</td>
+<td style="text-align:left">0.4155</td>
 </tr>
 <tr>
 <td style="text-align:left">Dallas</td>
 <td style="text-align:left">0.5984</td>
 <td style="text-align:left"><strong>0.7731</strong></td>
-<td style="text-align:left">0.3869 (Exp)</td>
+<td style="text-align:left">0.3869</td>
+<td style="text-align:left">0.2982</td>
 <td style="text-align:left">0.5158</td>
+<td style="text-align:left">0.3552</td>
 </tr>
 <tr>
 <td style="text-align:left">Denver</td>
 <td style="text-align:left">0.5969</td>
 <td style="text-align:left"><strong>0.7825</strong></td>
-<td style="text-align:left">0.6768 (Power)</td>
+<td style="text-align:left">0.6472</td>
+<td style="text-align:left">0.6768</td>
 <td style="text-align:left">0.5346</td>
+<td style="text-align:left">0.3829</td>
 </tr>
 <tr>
 <td style="text-align:left">Detroit</td>
 <td style="text-align:left">0.6547</td>
 <td style="text-align:left"><strong>0.7046</strong></td>
-<td style="text-align:left">0.5526 (Power)</td>
+<td style="text-align:left">0.5514</td>
+<td style="text-align:left">0.5526</td>
 <td style="text-align:left">0.4783</td>
+<td style="text-align:left">0.3839</td>
 </tr>
 <tr>
 <td style="text-align:left">El Paso</td>
 <td style="text-align:left">0.7906</td>
 <td style="text-align:left"><strong>0.8041</strong></td>
-<td style="text-align:left">0.6879 (Exp)</td>
+<td style="text-align:left">0.6879</td>
+<td style="text-align:left">0.6689</td>
 <td style="text-align:left">0.4970</td>
+<td style="text-align:left">0.4586</td>
 </tr>
 <tr>
 <td style="text-align:left">Fort Worth</td>
 <td style="text-align:left">0.8073</td>
 <td style="text-align:left"><strong>0.8279</strong></td>
-<td style="text-align:left">0.6792 (Exp)</td>
+<td style="text-align:left">0.6792</td>
+<td style="text-align:left">0.6469</td>
 <td style="text-align:left">0.5679</td>
+<td style="text-align:left">0.5333</td>
 </tr>
 <tr>
 <td style="text-align:left">Fresno</td>
 <td style="text-align:left">0.7519</td>
 <td style="text-align:left"><strong>0.8166</strong></td>
-<td style="text-align:left">0.7211 (Power)</td>
+<td style="text-align:left">0.7074</td>
+<td style="text-align:left">0.7211</td>
 <td style="text-align:left">0.5372</td>
+<td style="text-align:left">0.4937</td>
 </tr>
 <tr>
 <td style="text-align:left">Houston</td>
 <td style="text-align:left">0.4587</td>
 <td style="text-align:left"><strong>0.7519</strong></td>
-<td style="text-align:left">0.5055 (Exp)</td>
+<td style="text-align:left">0.5055</td>
+<td style="text-align:left">0.3697</td>
 <td style="text-align:left">0.4862</td>
+<td style="text-align:left">0.2481</td>
 </tr>
 <tr>
 <td style="text-align:left">Indianapolis</td>
 <td style="text-align:left">0.6564</td>
 <td style="text-align:left"><strong>0.7667</strong></td>
-<td style="text-align:left">0.6542 (Exp)</td>
+<td style="text-align:left">0.6542</td>
+<td style="text-align:left">0.6374</td>
 <td style="text-align:left">0.4909</td>
+<td style="text-align:left">0.3861</td>
 </tr>
 <tr>
 <td style="text-align:left">Jacksonville</td>
 <td style="text-align:left">0.5996</td>
 <td style="text-align:left"><strong>0.7970</strong></td>
-<td style="text-align:left">0.6788 (Exp)</td>
+<td style="text-align:left">0.6788</td>
+<td style="text-align:left">0.6476</td>
 <td style="text-align:left">0.4989</td>
+<td style="text-align:left">0.3304</td>
 </tr>
 <tr>
 <td style="text-align:left">Kansas City</td>
 <td style="text-align:left"><strong>0.7965</strong></td>
 <td style="text-align:left">0.7904</td>
-<td style="text-align:left">0.6461 (Exp)</td>
+<td style="text-align:left">0.6461</td>
+<td style="text-align:left">0.6440</td>
 <td style="text-align:left">0.5304</td>
+<td style="text-align:left">0.5269</td>
 </tr>
 <tr>
 <td style="text-align:left">Las Vegas</td>
 <td style="text-align:left">0.7317</td>
 <td style="text-align:left"><strong>0.7749</strong></td>
-<td style="text-align:left">0.6608 (Exp)</td>
+<td style="text-align:left">0.6608</td>
+<td style="text-align:left">0.6551</td>
 <td style="text-align:left">0.5585</td>
+<td style="text-align:left">0.5013</td>
 </tr>
 <tr>
 <td style="text-align:left">Long Beach</td>
 <td style="text-align:left"><strong>0.7592</strong></td>
 <td style="text-align:left">0.7490</td>
-<td style="text-align:left">0.6878 (Power)</td>
+<td style="text-align:left">0.6869</td>
+<td style="text-align:left">0.6878</td>
 <td style="text-align:left">0.5469</td>
+<td style="text-align:left">0.5508</td>
 </tr>
 <tr>
 <td style="text-align:left">Los Angeles</td>
 <td style="text-align:left">0.6030</td>
 <td style="text-align:left"><strong>0.6905</strong></td>
-<td style="text-align:left">0.3477 (Exp)</td>
+<td style="text-align:left">0.3477</td>
+<td style="text-align:left">0.3110</td>
 <td style="text-align:left">0.4284</td>
+<td style="text-align:left">0.3547</td>
 </tr>
 <tr>
 <td style="text-align:left">Louisville</td>
 <td style="text-align:left"><strong>0.7899</strong></td>
 <td style="text-align:left">0.7712</td>
-<td style="text-align:left">0.7143 (Exp)</td>
+<td style="text-align:left">0.7143</td>
+<td style="text-align:left">0.7048</td>
 <td style="text-align:left">0.5521</td>
+<td style="text-align:left">0.5299</td>
 </tr>
 <tr>
 <td style="text-align:left">Memphis</td>
 <td style="text-align:left">0.7390</td>
 <td style="text-align:left"><strong>0.7826</strong></td>
-<td style="text-align:left">0.6797 (Power)</td>
+<td style="text-align:left">0.6554</td>
+<td style="text-align:left">0.6797</td>
 <td style="text-align:left">0.4702</td>
+<td style="text-align:left">0.4146</td>
 </tr>
 <tr>
 <td style="text-align:left">Mesa</td>
 <td style="text-align:left"><strong>0.7992</strong></td>
 <td style="text-align:left">0.7988</td>
-<td style="text-align:left">0.6951 (Exp)</td>
+<td style="text-align:left">0.6951</td>
+<td style="text-align:left">0.6734</td>
 <td style="text-align:left">0.5817</td>
+<td style="text-align:left">0.5728</td>
 </tr>
 <tr>
 <td style="text-align:left">Miami</td>
 <td style="text-align:left"><strong>0.7576</strong></td>
 <td style="text-align:left">0.7357</td>
-<td style="text-align:left">0.7009 (Exp)</td>
+<td style="text-align:left">0.7009</td>
+<td style="text-align:left">0.6780</td>
 <td style="text-align:left">0.5478</td>
+<td style="text-align:left">0.5488</td>
 </tr>
 <tr>
 <td style="text-align:left">Milwaukee</td>
 <td style="text-align:left"><strong>0.7355</strong></td>
 <td style="text-align:left">0.7275</td>
-<td style="text-align:left">0.6461 (Power)</td>
+<td style="text-align:left">0.6358</td>
+<td style="text-align:left">0.6461</td>
 <td style="text-align:left">0.4889</td>
+<td style="text-align:left">0.4776</td>
 </tr>
 <tr>
 <td style="text-align:left">Minneapolis</td>
 <td style="text-align:left"><strong>0.7583</strong></td>
 <td style="text-align:left">0.7338</td>
-<td style="text-align:left">0.7080 (Power)</td>
+<td style="text-align:left">0.6816</td>
+<td style="text-align:left">0.7080</td>
 <td style="text-align:left">0.5435</td>
+<td style="text-align:left">0.5342</td>
 </tr>
 <tr>
 <td style="text-align:left">Nashville</td>
 <td style="text-align:left">0.6859</td>
 <td style="text-align:left"><strong>0.7881</strong></td>
-<td style="text-align:left">0.6607 (Exp)</td>
+<td style="text-align:left">0.6607</td>
+<td style="text-align:left">0.6417</td>
 <td style="text-align:left">0.4908</td>
+<td style="text-align:left">0.3991</td>
 </tr>
 <tr>
 <td style="text-align:left">New York</td>
 <td style="text-align:left">0.5786</td>
 <td style="text-align:left"><strong>0.6223</strong></td>
-<td style="text-align:left">0.2966 (Exp)</td>
+<td style="text-align:left">0.2966</td>
+<td style="text-align:left">0.2905</td>
 <td style="text-align:left">0.3353</td>
+<td style="text-align:left">0.3084</td>
 </tr>
 <tr>
 <td style="text-align:left">Oakland</td>
 <td style="text-align:left"><strong>0.7422</strong></td>
 <td style="text-align:left">0.7227</td>
-<td style="text-align:left">0.6996 (Power)</td>
+<td style="text-align:left">0.6536</td>
+<td style="text-align:left">0.6996</td>
 <td style="text-align:left">0.4989</td>
+<td style="text-align:left">0.5007</td>
 </tr>
 <tr>
 <td style="text-align:left">Oklahoma City</td>
 <td style="text-align:left">0.6215</td>
 <td style="text-align:left"><strong>0.7705</strong></td>
-<td style="text-align:left">0.6383 (Power)</td>
+<td style="text-align:left">0.6276</td>
+<td style="text-align:left">0.6383</td>
 <td style="text-align:left">0.4829</td>
+<td style="text-align:left">0.3519</td>
 </tr>
 <tr>
 <td style="text-align:left">Omaha</td>
 <td style="text-align:left">0.7861</td>
 <td style="text-align:left"><strong>0.7918</strong></td>
-<td style="text-align:left">0.7187 (Power)</td>
+<td style="text-align:left">0.6746</td>
+<td style="text-align:left">0.7187</td>
 <td style="text-align:left">0.5068</td>
+<td style="text-align:left">0.4716</td>
 </tr>
 <tr>
 <td style="text-align:left">Philadelphia</td>
 <td style="text-align:left">0.6152</td>
 <td style="text-align:left"><strong>0.7015</strong></td>
-<td style="text-align:left">0.5592 (Exp)</td>
+<td style="text-align:left">0.5592</td>
+<td style="text-align:left">0.5062</td>
 <td style="text-align:left">0.4233</td>
+<td style="text-align:left">0.3882</td>
 </tr>
 <tr>
 <td style="text-align:left">Phoenix</td>
 <td style="text-align:left">0.6647</td>
 <td style="text-align:left"><strong>0.7622</strong></td>
-<td style="text-align:left">0.5239 (Exp)</td>
+<td style="text-align:left">0.5239</td>
+<td style="text-align:left">0.4151</td>
 <td style="text-align:left">0.4937</td>
+<td style="text-align:left">0.4247</td>
 </tr>
 <tr>
 <td style="text-align:left">Portland</td>
 <td style="text-align:left">0.6439</td>
 <td style="text-align:left"><strong>0.7749</strong></td>
-<td style="text-align:left">0.6910 (Power)</td>
+<td style="text-align:left">0.6680</td>
+<td style="text-align:left">0.6910</td>
 <td style="text-align:left">0.5069</td>
+<td style="text-align:left">0.3945</td>
 </tr>
 <tr>
 <td style="text-align:left">Raleigh</td>
 <td style="text-align:left"><strong>0.8419</strong></td>
 <td style="text-align:left">0.8362</td>
-<td style="text-align:left">0.7220 (Exp)</td>
+<td style="text-align:left">0.7220</td>
+<td style="text-align:left">0.7123</td>
 <td style="text-align:left">0.5759</td>
+<td style="text-align:left">0.5498</td>
 </tr>
 <tr>
 <td style="text-align:left">Sacramento</td>
 <td style="text-align:left"><strong>0.8006</strong></td>
 <td style="text-align:left">0.7855</td>
-<td style="text-align:left">0.6942 (Exp)</td>
+<td style="text-align:left">0.6942</td>
+<td style="text-align:left">0.6806</td>
 <td style="text-align:left">0.5850</td>
+<td style="text-align:left">0.5671</td>
 </tr>
 <tr>
 <td style="text-align:left">San Antonio</td>
 <td style="text-align:left">0.7408</td>
 <td style="text-align:left"><strong>0.7774</strong></td>
-<td style="text-align:left">0.6214 (Exp)</td>
+<td style="text-align:left">0.6214</td>
+<td style="text-align:left">0.5847</td>
 <td style="text-align:left">0.4790</td>
+<td style="text-align:left">0.4395</td>
 </tr>
 <tr>
 <td style="text-align:left">San Diego</td>
 <td style="text-align:left">0.6512</td>
 <td style="text-align:left"><strong>0.7225</strong></td>
-<td style="text-align:left">0.5498 (Exp)</td>
+<td style="text-align:left">0.5498</td>
+<td style="text-align:left">0.4996</td>
 <td style="text-align:left">0.4743</td>
+<td style="text-align:left">0.3868</td>
 </tr>
 <tr>
 <td style="text-align:left">San Francisco</td>
 <td style="text-align:left">0.5686</td>
 <td style="text-align:left"><strong>0.6769</strong></td>
-<td style="text-align:left">0.6612 (Power)</td>
+<td style="text-align:left">0.6391</td>
+<td style="text-align:left">0.6612</td>
 <td style="text-align:left">0.4099</td>
+<td style="text-align:left">0.3089</td>
 </tr>
 <tr>
 <td style="text-align:left">San Jose</td>
 <td style="text-align:left">0.7174</td>
 <td style="text-align:left"><strong>0.7593</strong></td>
-<td style="text-align:left">0.6568 (Power)</td>
+<td style="text-align:left">0.6430</td>
+<td style="text-align:left">0.6568</td>
 <td style="text-align:left">0.5112</td>
+<td style="text-align:left">0.4532</td>
 </tr>
 <tr>
 <td style="text-align:left">Seattle</td>
 <td style="text-align:left">0.5352</td>
 <td style="text-align:left"><strong>0.7549</strong></td>
-<td style="text-align:left">0.6695 (Power)</td>
+<td style="text-align:left">0.6609</td>
+<td style="text-align:left">0.6695</td>
 <td style="text-align:left">0.5138</td>
+<td style="text-align:left">0.3153</td>
 </tr>
 <tr>
 <td style="text-align:left">Tampa</td>
 <td style="text-align:left"><strong>0.8270</strong></td>
 <td style="text-align:left">0.8119</td>
-<td style="text-align:left">0.6710 (Exp)</td>
+<td style="text-align:left">0.6710</td>
+<td style="text-align:left">0.6541</td>
 <td style="text-align:left">0.5468</td>
+<td style="text-align:left">0.5491</td>
 </tr>
 <tr>
 <td style="text-align:left">Tucson</td>
 <td style="text-align:left"><strong>0.8210</strong></td>
 <td style="text-align:left">0.8017</td>
-<td style="text-align:left">0.7067 (Power)</td>
+<td style="text-align:left">0.6922</td>
+<td style="text-align:left">0.7067</td>
 <td style="text-align:left">0.4987</td>
+<td style="text-align:left">0.4909</td>
 </tr>
 <tr>
 <td style="text-align:left">Tulsa</td>
 <td style="text-align:left"><strong>0.8254</strong></td>
 <td style="text-align:left">0.8242</td>
-<td style="text-align:left">0.7233 (Power)</td>
+<td style="text-align:left">0.6996</td>
+<td style="text-align:left">0.7233</td>
 <td style="text-align:left">0.4850</td>
+<td style="text-align:left">0.4772</td>
 </tr>
 <tr>
 <td style="text-align:left">Virginia Beach</td>
 <td style="text-align:left">0.7749</td>
 <td style="text-align:left"><strong>0.8101</strong></td>
-<td style="text-align:left">0.7035 (Power)</td>
+<td style="text-align:left">0.7030</td>
+<td style="text-align:left">0.7035</td>
 <td style="text-align:left">0.5127</td>
+<td style="text-align:left">0.4408</td>
 </tr>
 <tr>
 <td style="text-align:left">Washington DC</td>
 <td style="text-align:left"><strong>0.7351</strong></td>
 <td style="text-align:left">0.6856</td>
-<td style="text-align:left">0.6171 (Exp)</td>
+<td style="text-align:left">0.6171</td>
+<td style="text-align:left">0.6127</td>
 <td style="text-align:left">0.4744</td>
+<td style="text-align:left">0.4747</td>
 </tr>
 <tr>
 <td style="text-align:left">Wichita</td>
 <td style="text-align:left">0.7838</td>
 <td style="text-align:left"><strong>0.8062</strong></td>
-<td style="text-align:left">0.7395 (Power)</td>
+<td style="text-align:left">0.7194</td>
+<td style="text-align:left">0.7395</td>
 <td style="text-align:left">0.5003</td>
+<td style="text-align:left">0.4571</td>
 </tr>
 </tbody>
 </table>
@@ -839,13 +960,13 @@ Hệ số này đảm bảo rằng tổng xác suất di chuyển đến tất c
 </ul>
 </li>
 </ul>
-<p>![Average CPC 50 Cities](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/avg_cpc_50_cities.png)<br>
+<p><img src="avg_cpc_50_cities.png" alt="Average CPC 50 Cities"><br>
 <em>Hình 5: So sánh CPC trung bình của 6 mô hình trên 50 thành phố Hoa Kỳ.</em></p>
 <ul>
 <li><strong>Ưu thế tuyệt đối của Shell Models</strong>: Với CPC trung bình đạt <strong>0.733</strong>, các mô hình Shell vượt trội hơn hẳn so với Radiation (<strong>55.8%</strong> cải thiện) và Gravity tham số (<strong>17.0%</strong> cải thiện).</li>
 <li><strong>Tính ổn định</strong>: Biểu đồ phân bổ (Hình 6) cho thấy các mô hình Attraction-Uniform/Weighted có độ biến thiên thấp nhất, chứng minh khả năng thích ứng cao với nhiều loại hình cấu trúc đô thị.</li>
 </ul>
-<p>![CPC Distribution 50 Cities](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/cpc_distribution_50_cities.png)<br>
+<p><img src="cpc_distribution_50_cities.png" alt="CPC Distribution 50 Cities"><br>
 <em>Hình 6: Phân bổ chỉ số CPC của các mô hình trên 50 tập dữ liệu thành phố.</em></p>
 <h3 id="54-các-phát-hiện-chính">5.4 Các phát hiện chính </h3>
 <ul>
