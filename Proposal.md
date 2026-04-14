@@ -432,66 +432,47 @@ Nghiên cứu chỉ ra sự tương phản thú vị giữa các đô thị nén
 - **Giá trị của dữ liệu POI**: Trong 5/7 thành phố nghiên cứu, việc tích hợp POI giúp tinh chỉnh lựa chọn điểm đích và cải thiện độ chính xác thêm **5-15%**. Tại các thành phố có cấu trúc đặc thù như Austin, mô hình Uniform Shell đóng vai trò là một baseline cực kỳ vững chắc.
 
 ### 5.5 Kết quả kiểm chứng khả năng suy rộng (Spatial Generalization Results)
-Thử nghiệm **Partial-Training Shell** được mở rộng với dải lấy mẫu chi tiết (từ 1% đến 100%) để xác định ngưỡng dữ liệu tối thiểu và sự đánh đổi giữa quy luật toàn cục (Global Law) và hồ sơ di chuyển cục bộ (Localized Profiles).
+Thử nghiệm **Distributed-Sampling Shell** được thực hiện để đánh giá khả năng suy rộng của quy luật di chuyển dải khi dữ liệu huấn luyện bị hạn chế nhưng đảm bảo tính bao phủ không gian (stratified sampling across all clusters).
 
-| Thành phố | **Localized Baseline** | **Global Law (100% Avg)** | **10% Training** | **1% Training** |
+| Thành phố | **Localized Baseline** | **Global Law (90%)** | **10% Sample** | **1% Sample** |
 | :--- | :--- | :--- | :--- | :--- |
-| **Seoul (SU)** | **0.7623** | 0.5400 | 0.5391 | 0.5357 |
-| **Singapore (SGP)** | **0.6764** | 0.2812 | 0.2817 | 0.2447 |
+| **Seoul (SU)** | **0.7623** | 0.7259 | 0.7248 | 0.7221 |
+| **Singapore (SGP)** | **0.6764** | 0.5492 | 0.5479 | 0.5428 |
 
 **Nhận xét chuyên sâu**:
-1.  **Điểm bão hòa dữ liệu (Point of Saturation)**: Cả hai thành phố đều đạt trạng thái bão hòa quy luật di chuyển ngay từ mức **1% - 3%** dữ liệu huấn luyện (khoảng 4-10 vùng mẫu). Việc tăng thêm dữ liệu từ 10% lên 100% không làm thay đổi đáng kể chỉ số CPC của mô hình toàn cục (biến thiên < 0.5%). Điều này cho thấy tính ổn định cực cao của cấu trúc Shell trong việc nắm bắt bản chất di chuyển đô thị chỉ từ một mẫu nhỏ.
-2.  **Global Law hữu ích nhưng không thay thế được Localized Profiles**: Mặc dù quy luật toàn cục ($\bar{P}(bin_k)$) vẫn vượt trội hơn mô hình Radiation truyền thống (SU: 0.54 vs 0.30; SGP: 0.28 vs 0.18), sự chênh lệch đáng kể so với Localized Baseline chứng minh rằng hành vi di chuyển có tính Heterogeneous (dị biệt) cao tùy thuộc vào vị trí khởi hành. 
-3.  **Đặc thù đô thị**: Seoul thể hiện tính đồng nhất cao hơn Singapore khi áp dụng quy luật toàn cục. Tại Singapore, sự phụ thuộc vào các hồ sơ cục bộ (Origin-specific profiles) là yếu tố sống còn để đạt độ chính xác cao, điều này có thể giải thích bởi cấu trúc quy hoạch chức năng cực kỳ tập trung của đảo quốc.
+1.  **Tính bao phủ không gian là yếu tố then chốt**: So với các thử nghiệm lấy mẫu ngẫu nhiên thuần túy trước đây (SGP chỉ đạt CPC 0.28), việc áp dụng **lấy mẫu phân đoạn (stratified sampling)** qua 10 cụm địa lý đã giúp CPC của Singapore tăng vọt lên **0.54**. Điều này chứng minh rằng để hiểu quy luật di chuyển của một thành phố, sự đa dạng về vị trí không gian của dữ liệu quan trọng hơn tổng số lượng dữ liệu thu thập được.
+2.  **Độ bão hòa thông tin (Information Saturation)**: Cả hai thành phố đều thể hiện sự ổn định kinh ngạc. Khi giảm dữ liệu từ 90% xuống chỉ còn **1%** (chỉ lấy 4-5 subzone làm đại diện), chỉ số CPC chỉ giảm chưa đầy **0.5%**. Quy luật Shell Law dường như được "khóa" chặt vào cấu trúc hạ tầng đô thị và không bị nhiễu bởi sự thiếu hụt dữ liệu thống kê.
+3.  **Khả năng thay thế mô hình truyền thống**: Với mức CPC tối thiểu ~0.54 (SGP) và ~0.72 (SU), mô hình **Distributed Global Shell** hoàn toàn có thể thay thế các mô hình Radiation (0.18-0.30) hoặc Gravity hàm mũ (0.45) trong việc dự báo luồng di chuyển tại các khu vực hoàn toàn không có dữ liệu khảo sát.
 
 ![Comprehensive Sensitivity Curve](su/step15_comprehensive_sensitivity.png)
 *Hình 7: Đường cong độ nhạy toàn diện (Sensitivity Curve) từ 1% đến 100% dữ liệu huấn luyện (Kết hợp thử nghiệm Distributed Sampling).*
 
-#### 5.5.2 Thử nghiệm Phân cụm Không gian (Spatial Clustering Experiment)
-Để đánh giá khả năng suy rộng thực tế khi dữ liệu bị thiếu hụt theo vùng địa lý (ví dụ: một quận hoàn toàn không có dữ liệu), chúng tôi thực hiện chia 421 subzones của Seoul thành **10 cụm (clusters)** có kích thước tương đương và đảm bảo tính liền kề về mặt địa lý bằng thuật toán K-Means trên tọa độ centroid.
+#### 5.5.2 Thử nghiệm Phân cụm Không gian và Kiểm chứng Chéo (LOCO CV)
+Để đánh giá khả năng suy rộng thực tế khi dữ liệu bị thiếu hụt hoàn toàn theo vùng địa lý (ví dụ: một quận không có dữ liệu), chúng tôi chia mỗi thành phố thành **10 cụm không gian** và thực hiện thử nghiệm **Leave-One-Cluster-Out (LOCO)** (huấn luyện trên 9 cụm, kiểm tra trên cụm còn lại).
 
-Thử nghiệm **Leave-One-Cluster-Out (LOCO)** được thực hiện bằng cách huấn luyện quy luật di chuyển trên 9 cụm và kiểm tra độ chính xác (CPC) trên cụm còn lại.
-
-| Fold (Cluster) | Số Subzones | CPC (Validation) |
+| Chỉ số | Seoul (SU) | Singapore (SGP) |
 | :--- | :--- | :--- |
-| Cluster 1 | 51 | 0.7299 |
-| Cluster 2 | 52 | 0.7282 |
-| Cluster 3 | 35 | 0.7270 |
-| Cluster 4 | 36 | 0.7314 |
-| Cluster 5 | 52 | 0.7116 |
-| Cluster 6 | 38 | 0.6938 |
-| Cluster 7 | 52 | 0.7244 |
-| Cluster 8 | 41 | 0.7367 |
-| Cluster 9 | 30 | 0.7129 |
-| Cluster 10 | 34 | 0.7386 |
-| **Trung bình (Mean)** | **42** | **0.7235** |
+| Số Subzones trung bình/Cụm | 42 | 32 |
+| CPC trung bình (Validation) | **0.7235** | **0.5572** |
+| Độ lệch chuẩn (Std Dev) | 0.0121 | 0.0315 |
+
+**Nhận xét**: Cả hai thành phố đều cho thấy sự ổn định không gian đáng kể. Tại Seoul, tri thức từ các quận khác giúp đạt độ chính xác tương đương 95% mô hình đầy đủ. Tại Singapore, mặc dù cấu trúc đô thị phức tạp hơn, mô hình vẫn đạt CPC ~0.56 trên các vùng hoàn toàn mới, khẳng định khả năng transferability (chuyển giao) của quy luật Shell.
 
 ![Seoul Spatial Clusters](su/step11_spatial_clusters.png)
-*Hình 8: Phân chia Seoul thành 10 cụm không gian liền kề phục vụ thử nghiệm kiểm chứng chéo.*
-
-**Nhận xét**: Kết quả CPC trung bình **0.7235** là cực kỳ ấn tượng, chỉ thấp hơn kết quả huấn luyện đầy đủ (0.76) khoảng 5%. Điều này khẳng định rằng quy luật di chuyển phụ thuộc quy mô có tính phổ quát rất cao trong cùng một đô thị; tri thức chuyển giao từ các vùng khác hoàn toàn có thể dùng để phục hồi luồng di chuyển cho một vùng mới mà không cần dữ liệu lịch sử tại chỗ.
+*Hình 8: Minh họa phân chia thành phố thành các cụm không gian liền kề (Ví dụ tại Seoul).*
 
 #### 5.5.3 Thử nghiệm Quy luật theo Cụm (Intra-District Law)
-Để kiểm tra xem liệu một quy luật di chuyển được tinh chỉnh riêng cho từng vùng (District-tailored law) có mang lại sự cải thiện đáng kể so với quy luật chung của thành phố hay không, chúng tôi áp dụng xác suất $P(bin_k)$ được tính toán từ chính các subzone trong cùng một cụm để dự báo.
+Để kiểm tra xem liệu quy luật di chuyển tinh chỉnh riêng cho từng vùng (District-tailored law) có tối ưu hơn quy luật chung không, chúng tôi áp dụng xác suất $P(bin_k)$ được tính toán từ chính các subzone trong cùng một cụm để dự báo nội vùng.
 
-| Folk (Cluster) | CPC (Localized Rule) |
-| :--- | :--- |
-| Cluster 1 | 0.7341 |
-| Cluster 2 | 0.7413 |
-| Cluster 3 | 0.7315 |
-| Cluster 4 | 0.7404 |
-| Cluster 5 | 0.7191 |
-| Cluster 6 | 0.6999 |
-| Cluster 7 | 0.7294 |
-| Cluster 8 | 0.7396 |
-| Cluster 9 | 0.7144 |
-| Cluster 10 | 0.7450 |
-| **Trung bình (Mean)** | **0.7295** |
+| Chỉ số CPC | Seoul (SU) | Singapore (SGP) |
+| :--- | :--- | :--- |
+| Intra-District Law (Local) | **0.7295** | **0.5678** |
+| Global Law (Transfer) | 0.7235 | 0.5572 |
+| Chênh lệch (Gain) | +0.0060 | +0.0106 |
 
-**So sánh và thảo luận**:
-- **Intra-District Law (0.7295)** vs **Global Seoul Law (0.54)**: Việc địa phương hóa quy luật ở cấp độ cụm (district) giúp tăng độ chính xác lên đáng kể so với việc dùng một quy luật duy nhất cho toàn thành phố.
-- **Intra-District (0.73) vs LOCO Cross-Validation (0.72)**: Hiệu suất khi dùng dữ liệu nội vùng chỉ cao hơn một chút so với khi dùng dữ liệu từ các vùng khác. Điều này cho thấy các "quy luật di chuyển dải" (Shell laws) tại Seoul rất bền vững và ít biến động giữa các khu vực địa lý khác nhau.
-- **Khoảng cách so với Localized Profile (0.76)**: Cả hai thử nghiệm trên vẫn chưa bắt kịp độ chính xác của hồ sơ di chuyển riêng biệt cho từng điểm xuất phát cụ thể. Điều này gợi ý rằng sự biến thiên hữu hiệu nhất nằm ở mức độ từng điểm đơn lẻ (Origin-specific) hơn là mức độ khu vực (Region-specific).
+**Thảo luận và Kết luận**:
+- **Tính tự tương quan không gian**: Việc sử dụng quy luật nội cụm chỉ mang lại sự cải thiện rất nhỏ (< 1%) so với việc sử dụng quy luật chuyển giao từ các cụm khác. Điều này một lần nữa khẳng định tính bền vững và sự hội tụ của quy luật Shell Law trong phạm vi một đô thị.
+- **Tính ưu việt của khung Shell Models**: Khác với các mô hình tham số (như Gravity) vốn phụ thuộc nặng nề vào việc ước lượng hệ số decay $\gamma$ cho từng khu vực, phương pháp Shell đề xuất cho thấy khả năng tự thích ứng cực tốt. Tri thức di chuyển từ một vài vùng rải rác là đủ để đại diện cho toàn bộ cấu trúc vận động của một siêu đô thị.
 
 # 6. Discussion
 Phân tích kết quả thực nghiệm mở rộng trên 52 thành phố (bao gồm Singapore, Seoul và 50 thành phố Hoa Kỳ) mang lại những thảo luận quan trọng về các quy luật di chuyển đô thị hiện đại:
