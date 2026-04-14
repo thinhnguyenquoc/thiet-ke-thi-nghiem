@@ -1,0 +1,100 @@
+- **Kiểm chứng**: Áp dụng quy luật thu được cho các quận còn lại và đánh giá độ chênh lệch hiệu suất.
+
+#### 4.4.3 Đánh giá và Ngưỡng dữ liệu tối thiểu
+Độ chính xác được đánh giá qua chỉ số **CPC** trên tập kiểm thử $I_{test}$. Thử nghiệm này giúp xác định "điểm bão hòa" dữ liệu – tức là tỷ lệ mẫu tối thiểu cần thiết để mô hình Shell đạt được độ chính xác tương đương với khi sử dụng dữ liệu đầy đủ, từ đó tối ưu hóa chi phí khảo sát và thu thập dữ liệu trong thực tế.
+
+# 5. Results
+Nghiên cứu đã thực hiện một phân tích toàn diện trên 52 quy mô đô thị khác nhau, bao gồm các siêu đô thị nén tại Châu Á (Singapore, Seoul) và 50 thành phố Hoa Kỳ với cấu trúc dàn trải. Kết quả khẳng định sự thống trị của các mô hình dựa trên cấu trúc vỏ (Shell Models) trong việc phục hồi luồng di chuyển.
+
+### 5.1 Tổng hợp hiệu suất toàn cầu (Global Performance Synthesis)
+Bảng dưới đây tổng hợp chỉ số **Origin-Averaged CPC** trung bình trên toàn bộ các thành phố nghiên cứu, thiết lập một thứ bậc hiệu suất mới cho các dòng mô hình di chuyển:
+
+| Model Framework | Global Avg CPC | Phân loại | Logic cốt lõi |
+| :--- | :--- | :--- | :--- |
+| **Attraction-Uniform (Shell)** | **0.7408** | Cấu trúc (Structural) | Dải khoảng cách 1km |
+| **Attraction-Weighted (POI)** | **0.7100** | Tối ưu (Optimization) | Vỏ + Hấp dẫn POI |
+| **Exponential Decay (PC)** | 0.6402 | Tham số (Parametric) | Ràng buộc sản lượng (PC) |
+| **Power Decay (PC)** | 0.6163 | Tham số (Parametric) | Ràng buộc sản lượng (PC) |
+| **Radiation (Pop)** | 0.4421 | Cơ hội xen giữa | Cơ hội (Dân số) |
+| **Radiation (POI)** | 0.4117 | Cơ hội xen giữa | Cơ hội (POI) |
+
+> [!IMPORTANT]
+> Sự cải thiện CPC của mô hình Gravity tham số (từ ~0.30 lên >0.60) chứng minh tầm quan trọng của việc áp dụng **Production-Constrained**. Tuy nhiên, mô hình Shell vẫn là tiêu chuẩn vàng với độ chính xác và tính ổn định vượt trội.
+
+### 5.2 Đặc tả dữ liệu thực nghiệm
+#### 5.1.1 Singapore và Seoul
+Dưới đây là các thông số đặc trưng của tập dữ liệu sử dụng cho hai thành phố:
+
+| Thông số | **Singapore (SGP)** | **Seoul (SU)** |
+| :--- | :--- | :--- |
+| **Số lượng vùng (Subzones)** | 323 khu vực | 421 khu vực |
+| **Tổng dân số (WorldPop)** | **5.847.722** | **9.471.043** |
+| **Hệ tọa độ (CRS)** | EPSG:3414 (SVY21) | EPSG:5179 (UTM-K) |
+| **Dữ liệu POI (OSM)** | 45,000 tiện ích | 101,185 tiện ích |
+| **Dữ liệu di chuyển** | Ma trận OD thực tế quan sát theo tuần | Ma trận OD thực tế quan sát theo tuần |
+
+#### 5.1.2 50 thành phố Hoa Kỳ (USA)
+Để đánh giá tính phổ quát và khả năng thích ứng của mô hình trên các cấu trúc đô thị khác nhau, nghiên cứu mở rộng quy mô thực nghiệm trên 50 thành phố lớn tại Hoa Kỳ:
+
+- **Đơn vị phân tích**: Sử dụng các đơn vị giải thửa dân số (**Census Tracts**) làm đơn vị phân vùng không gian.
+- **Quy mô dữ liệu**: 
+    - Tổng số thành phố: 50 đô thị loại lớn và trung bình.
+    - Số lượng vùng (Tracts): Dao động trung bình từ 150 đến 500 vùng mỗi thành phố (ví dụ: Washington DC: 179, Fort Worth: 357, Miami: 519).
+- **Các thành phần dữ liệu**:
+    - **POI**: Trích xuất từ OpenStreetMap với đầy đủ các phân nhóm tiện ích đô thị.
+    - **Hạ tầng**: Tích hợp mạng lưới đường bộ và dữ liệu giao thông công cộng (GTFS).
+    - **Lưu lượng di chuyển**: Ma trận OD thực tế được tổng hợp từ dữ liệu di động ẩn danh quy mô lớn, phản ánh cấu trúc di chuyển đặc trưng của Bắc Mỹ.
+
+### 5.2 Đặc tả các mô hình thực nghiệm
+Nghiên cứu thực hiện so sánh đối chiếu 6 biến thể mô hình để đánh giá ảnh hưởng của cấu trúc không gian và dữ liệu tiện ích. Ràng buộc dữ lệu dầu vào sử dụng ràng buộc Production-Constrained để kiểm tra mang tính công bằng cho các mô hình.
+
+1.  **Radiation (Pop)**: Mô hình bức xạ truyền thống.
+    $$ \hat{T}_{ij} = O_i \times \frac{m_i \times n_j}{(m_i + s_{ij}) \times (m_i + n_j + s_{ij})} $$
+2.  **Radiation (POI)**: Biến thể mô hình bức xạ sử dụng tổng số lượng POI làm "khối lượng hấp dẫn" và "cơ hội xen giữa" thay cho dân số.
+    $$ \hat{T}_{ij} = O_i \times \frac{B_i \times B_j}{(B_i + s^{poi}_{ij}) \times (B_i + B_j + s^{poi}_{ij})} $$
+3.  **Exponential Decay**: Mô hình Gravity parametric có ràng buộc điểm nguồn (Production-Constrained), sử dụng hàm suy giảm mũ.
+    $$ T_{ij} = A_i \times O_i \times D_j \times f(r_{ij}) $$
+    Trong đó, hàm suy giảm khoảng cách là $f(r_{ij}) = e^{-\gamma r_{ij}}$.
+4.  **Power Decay**: Mô hình Gravity parametric có ràng buộc điểm nguồn, sử dụng hàm suy giảm lũy thừa.
+    $$ T_{ij} = A_i \times O_i \times D_j \times f(r_{ij}) $$
+    Trong đó, hàm suy giảm khoảng cách là $f(r_{ij}) = r_{ij}^{-\gamma}$.
+
+**Chi tiết về mô hình Gravity có ràng buộc (Production-Constrained):**
+Lưu lượng dự báo $T_{ij}$ từ gốc $i$ đến đích $j$ được xác định bởi:
+- **$O_i$**: Tổng sản lượng (Production) đã biết xuất phát từ gốc $i$.
+- **$D_j$**: Sức hấp dẫn (Attractiveness) của điểm đích $j$: $D_j = n_j$
+- **$f(r_{ij})$**: Hàm suy giảm khoảng cách (Distance Decay Function), đại diện cho chi phí di chuyển.
+- **$A_i$**: Hệ số cân bằng (Balancing Factor), được tính toán để đảm bảo tổng lưu lượng dự báo từ điểm gốc bằng đúng sản lượng thực tế:
+$$ A_i = \frac{1}{\sum_{ij} D_j \times f(r_{ij})} $$
+Hệ số này đảm bảo rằng tổng xác suất di chuyển đến tất cả các điểm đích khả thi từ $i$ luôn bằng 1.
+
+5.  **Attraction-Uniform**: Mô hình vỏ (Shell) 1km đề xuất, phân bổ đều luồng di chuyển.
+    $$ \hat{T}_{ij} = O_{i} \times P(\text{bin}_{k}|i) \times P(j|bin_k, i) $$
+    
+Với $$P(j|bin_k, i) = \frac{1}{\sum_{z \in \text{bin}_{k}} 1}$$
+
+6.  **Attraction-Weighted**: Mô hình tối ưu đề xuất, phân bổ luồng di chuyển dựa trên trọng số POI.
+    $$ \hat{T}_{ij} = O_{i} \times P(\text{bin}_{k}|i) \times P(j|bin_k, i) $$
+
+Với $$P(j|bin_k, i) = \frac{B_j}{\sum_{z \in \text{bin}_{k}} B_z}$$
+
+*Ghi chú về ước lượng tham số*: Trong nghiên cứu này, chúng tôi thực hiện ước lượng các tham số của mô hình Gravity theo cấu trúc **Singly-Constrained** (ràng buộc điểm nguồn). Để đảm bảo tính tinh gọn và khả năng suy rộng của mô hình, sức hấp dẫn của điểm đích được cố định bằng quy mô dân số ($D_j = n_j$), do đó tham số tự do duy nhất cần ước lượng là hệ số suy giảm khoảng cách $\gamma$. Tham số này được tìm kiếm thông qua giải thuật tối ưu hóa phi tuyến (`scipy.optimize.minimize`) với mục tiêu tối đa hóa chỉ số **CPC (Common Part of Commuters)** trên toàn bộ mạng lưới OD của thành phố. Phương pháp này đảm bảo mô hình không chỉ khớp về mặt thống kê mà còn đạt hiệu quả cao nhất trong việc mô phỏng cấu trúc di chuyển đô thị thực tế.
+
+### 5.3 Kết quả hiệu suất mô hình
+Dưới đây là bảng so sánh chi tiết hiệu suất của 6 mô hình tại hai thành phố nghiên cứu dựa trên các chỉ số CPC (Common Part of Commuters), $R^2$, MAE (Mean Absolute Error) và RMSE (Root Mean Square Error).
+
+#### 5.3.1 Kết quả thực nghiệm tại Singapore (SGP)
+| Phiên bản mô hình | Lực hút ($D_j$) | **CPC** | **$R^2$** | **MAE** (Trips) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Radiation** | Population | 0.4042 | -1.78 | 473.55 |
+| **Radiation** | **POI ($B_j$)** | 0.4087 | -1.16 | 458.12 |
+| **Power Decay** | Population | 0.4846 | 0.29 | 365.12 |
+| **Power Decay** | **POI ($B_j$)** | **0.5146** | 0.51 | 312.45 |
+| **Exponential Decay** | Population | 0.5360 | 0.60 | 298.34 |
+| **Exponential Decay** | **POI ($B_j$)** | **0.5354** | 0.53 | 315.12 |
+| **Attraction-Uniform**| Shell Layout | 0.7011 | 0.76 | 211.45 |
+| **Attraction-Weighted**| **Shells + POIs** | **0.7554** | **0.81** | **185.34** |
+
+#### 5.3.2 Kết quả thực nghiệm tại Seoul (SU)
+| Phiên bản mô hình | Lực hút ($D_j$) | **CPC** | **$R^2$** | **MAE** |
+| :--- | :--- | :--- | :--- | :--- |

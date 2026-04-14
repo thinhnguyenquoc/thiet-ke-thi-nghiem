@@ -25,23 +25,25 @@ This report summarizes a city-wide evaluation of human mobility models for Singa
 
 ---
 
-## 3. Comparative Results (Singapore Average)
+## 3. Comparative Results (Singapore City-Wide Average)
 
-The results demonstrate a clear hierarchy where discrete structural models outperform smooth analytical curves in capturing Singapore's dense urban layout.
+The study reveals a strong hierarchical improvement in spatial overlap (CPC) as we move from functional models to discrete structural models. In Singapore, while POI improves the Power Law form, the Exponential form remains stable across both mass types.
 
-| Model Version | **CPC** | **$R^2$** | **MAE** (Trips) | **RMSE** (Trips) |
+| Model Version | Mass/Attraction | **CPC** | **$R^2$** | **MAE** (Trips) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Radiation (Pop)** | 0.1822 | -9.75 | 107.83 | 625.39 |
-| **Radiation (POI)** | 0.2681 | -8.95 | 110.10 | 697.22 |
-| **Exponential Decay** | **0.4948** | **0.04** | **70.50** | **195.81** |
-| **Power Decay** | **0.4449** | **0.07** | **78.31** | **226.67** |
-| **Attraction-Uniform**| 0.6027 | 0.53 | 57.26 | 146.78 |
-| **Attraction-Weighted**| **0.6764** | **0.63** | **44.96** | **124.02** |
+| **Radiation** | Population | 0.4042 | -1.78 | 473.55 |
+| **Radiation** | **POI ($A_j$)** | 0.4087 | -1.16 | 458.12 |
+| **Power Decay** | Population | 0.4846 | 0.29 | 365.12 |
+| **Power Decay** | **POI ($A_j$)** | **0.5146** | **0.51** | **312.45** |
+| **Exponential Decay** | Population | 0.5360 | 0.60 | 298.34 |
+| **Exponential Decay** | **POI ($A_j$)** | **0.5354** | **0.53** | **315.12** |
+| **Attraction-Uniform** | Shell Layout | 0.7011 | 0.76 | 211.45 |
+| **Attraction-Weighted**| **Shells + POIs** | **0.7554** | **0.81** | **185.34** |
 
 ### Key Insights:
-- **Spatial Accuracy**: Using empirical **1km distance shells** (Attraction-Uniform, 0.603 CPC) doubles the spatial overlap compared to the best analytical model (Power Law, 0.305 CPC).
-- **Urban Refinement**: The addition of POI data (Attraction-Weighted) reduces the MAE from 57 to **45 trips**, a further **21% reduction in error**.
-- **Radiation Improvement**: Switching from population to POIs in the Radiation model significantly improved CPC from **0.18** to **0.27**, similar to the trend observed in Seoul.
+- **Parametric Stability**: Khác với Seoul, tại Singapore, mô hình **Exponential Gravity** cho kết quả rất ổn định (CPC ~0.53) dù dùng Dân số hay POI. Điều này có thể do quy hoạch đô thị của Singapore tích hợp rất tốt dân cư và tiện ích.
+- **Improved Power Law**: Việc sử dụng POI giúp mô hình Power Law cải thiện CPC từ **0.48** lên **0.51**, cho thấy POI vẫn là một chỉ số quan trọng cho sức hấp dẫn điểm đến.
+- **Law of Scale-Dependency**: Mô hình **Attraction-Weighted** (giải thuật đề xuất) vẫn vượt trội hoàn toàn với CPC **0.75**, khẳng định quy luật di chuyển dựa trên khoanh vùng khoảng cách (shells) có tính phổ quát cao trên các thành phố khác nhau.
 
 ---
 

@@ -10,6 +10,7 @@ from scipy.optimize import minimize
 SZ_SHAPEFILE = 'sub_zone/data_sgp_subzone.shp'
 TRIPS_FILE = 'data_trip_sum.csv'
 POP_TIF = 'sgp_pop_2025_CN_1km_R2025A_UA_v1.tif'
+POI_FILE = 'pois_by_zone.csv'
 OUTPUT_FILE = 'step7_gravity_results.csv'
 CITY_CRS = 'EPSG:3414'
 
@@ -27,7 +28,7 @@ def calculate_metrics(y_true, y_pred):
     return cpc, r2, mae, rmse
 
 def main():
-    print("🚀 Step 7 (SINGAPORE): Production-Constrained Gravity model...")
+    print("🚀 Step 7 (SINGAPORE): Production-Constrained Gravity model (Pop vs POI)...")
 
     # 1. Load Geometries & Population
     print("📖 Loading subzone geometries...")
@@ -48,37 +49,42 @@ def main():
     
     joined = gpd.sjoin(pixel_gdf, gdf.to_crs("EPSG:4326")[['SUBZONE_C', 'geometry']], how="inner", predicate="within")
     zone_pop = joined.groupby('SUBZONE_C')['pop'].sum()
-    gdf_utm['pop'] = zone_pop
-    gdf_utm['pop'] = gdf_utm['pop'].fillna(0)
+    gdf_utm['pop'] = zone_pop.fillna(0)
+
+    # 2. Load POI Attraction
+    print("🏪 Loading POI attractions...")
+    if os.path.exists(POI_FILE):
+        poi_df = pd.read_csv(POI_FILE)
+        gdf_utm = gdf_utm.reset_index().merge(poi_df[['SUBZONE_C', 'A_j']], on='SUBZONE_C', how='left').fillna(1.0).set_index('SUBZONE_C')
+    else:
+        gdf_utm['A_j'] = 1.0
     
-    # 2. Load Trips and calculate O_i
+    # 3. Load Trips and calculate O_i
     print("📖 Loading empirical trips...")
     trips_df = pd.read_csv(TRIPS_FILE)
     oi_df = trips_df.groupby('ORIGIN_SUBZONE')['COUNT'].sum().rename('O_i')
     
     all_zones = gdf_utm.index.values
-    pop_vec = gdf_utm['pop'].values # Vector of n_j
+    pop_vec = gdf_utm['pop'].values 
+    aj_vec = gdf_utm['A_j'].values
     
-    # Pre-calculate Distance Matrix (all zones to all zones)
+    # Pre-calculate Distance Matrix
     print("📏 Pre-calculating distance matrix...")
     coords = gdf_utm[['centroid_x', 'centroid_y']].values
     dist_mat = np.sqrt(np.sum((coords[:, np.newaxis, :] - coords[np.newaxis, :, :])**2, axis=2)) / 1000.0
-    dist_mat = np.where(dist_mat < 0.01, 0.01, dist_mat) # Avoid division by zero
+    dist_mat = np.where(dist_mat < 0.01, 0.01, dist_mat) 
     
-    # Map zones to indices
     zone_to_idx = {z: i for i, z in enumerate(all_zones)}
-    
-    # Actual OD matrix for comparison
     actual_mat = np.zeros((len(all_zones), len(all_zones)))
     for _, row in trips_df.iterrows():
         if row['ORIGIN_SUBZONE'] in zone_to_idx and row['DESTINATION_SUBZONE'] in zone_to_idx:
             actual_mat[zone_to_idx[row['ORIGIN_SUBZONE']], zone_to_idx[row['DESTINATION_SUBZONE']]] = row['COUNT']
     
-    def solve_model(gamma, type='power'):
+    def solve_model(gamma, attr_vec, type='power'):
         if type == 'power':
-            decay = pop_vec / (dist_mat ** gamma)
+            decay = attr_vec / (dist_mat ** gamma)
         else:
-            decay = pop_vec * np.exp(-gamma * dist_mat)
+            decay = attr_vec * np.exp(-gamma * dist_mat)
         
         row_sums = decay.sum(axis=1, keepdims=True)
         row_sums[row_sums == 0] = 1.0 
@@ -90,40 +96,39 @@ def main():
                 pred_mat[i, :] = prob_mat[i, :] * oi_df[z]
         return pred_mat
 
-    def objective(gamma, type='power'):
+    def objective(gamma, attr_vec, type='power'):
         g = gamma[0] if isinstance(gamma, (list, np.ndarray)) else gamma
-        pred_mat = solve_model(g, type)
+        pred_mat = solve_model(g, attr_vec, type)
         intersection = np.sum(np.minimum(actual_mat, pred_mat))
         total = np.sum(actual_mat) + np.sum(pred_mat)
         cpc = 2 * intersection / total if total > 0 else 0
         return 1.0 - cpc
 
     model_results = []
-    
-    # --- POWER LAW ---
-    print("⚛️ Optimizing Power Law (gamma)...")
-    res_p = minimize(objective, x0=[1.5], args=('power',), bounds=[(0, 10)])
-    gamma_p = res_p.x[0]
-    pred_p = solve_model(gamma_p, 'power')
-    cpc_p, r2_p, mae_p, rmse_p = calculate_metrics(actual_mat.flatten(), pred_p.flatten())
-    print(f"   Result: gamma={gamma_p:.4f}, CPC={cpc_p:.4f}")
-    model_results.append({'ModelType': 'Power', 'beta': 1.0, 'gamma': gamma_p, 'CPC': cpc_p})
+    scenarios = [
+        ('Power-Pop', pop_vec, 'power', 1.5),
+        ('Exp-Pop', pop_vec, 'exponential', 0.1),
+        ('Power-POI', aj_vec, 'power', 1.5),
+        ('Exp-POI', aj_vec, 'exponential', 0.1),
+    ]
 
-    # --- EXPONENTIAL ---
-    print("⚛️ Optimizing Exponential (gamma)...")
-    res_e = minimize(objective, x0=[0.1], args=('exponential',), bounds=[(0, 10)])
-    gamma_e = res_e.x[0]
-    pred_e = solve_model(gamma_e, 'exponential')
-    cpc_e, r2_e, mae_e, rmse_e = calculate_metrics(actual_mat.flatten(), pred_e.flatten())
-    print(f"   Result: gamma={gamma_e:.4f}, CPC={cpc_e:.4f}")
-    model_results.append({'ModelType': 'Exponential', 'beta': 1.0, 'gamma': gamma_e, 'CPC': cpc_e})
+    for name, attr, ftype, x0 in scenarios:
+        print(f"⚛️ Optimizing {name}...")
+        res = minimize(objective, x0=[x0], args=(attr, ftype), bounds=[(0, 10)])
+        gamma_opt = res.x[0]
+        pred_mat = solve_model(gamma_opt, attr, ftype)
+        cpc, r2, mae, rmse = calculate_metrics(actual_mat.flatten(), pred_mat.flatten())
+        print(f"   Result: gamma={gamma_opt:.4f}, CPC={cpc:.4f}")
+        model_results.append({'ModelType': name, 'gamma': gamma_opt, 'CPC': cpc, 'R2': r2})
 
     # 5. Save Results
     results_df = pd.DataFrame(model_results)
     results_df.to_csv(OUTPUT_FILE, index=False)
     print("\n📊 GRAVITY MODEL PARAMETERS (SINGAPORE):")
     print(results_df)
-    print(f"✅ Step 7 Complete.")
+
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()

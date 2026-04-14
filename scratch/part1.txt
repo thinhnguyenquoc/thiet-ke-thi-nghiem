@@ -1,0 +1,100 @@
+# 1. Title (Tiêu đề)
+Sử dụng mô hình dựa trên phân bổ xác suất di chuyển để ước lượng luồng di chuyển tại các thành phố lớn: Singapore, Seoul
+# 2. Abstract
+Dữ liệu luồng di chuyển đô thị đóng vai trò then chốt trong quy hoạch giao thông và dự báo dịch bệnh. Tuy nhiên, các mô hình truyền thống như Gravity và Radiation thường gặp hạn chế khi áp dụng cho các cấu trúc đô thị đa dạng. Nghiên cứu đề xuất phương pháp **Scale-Dependent Mobility Law** dựa trên phân bổ xác suất di chuyển rời rạc kết hợp với dữ liệu mở OpenStreetMap. Thực nghiệm mở rộng trên 52 thành phố (bao gồm Seoul, Singapore và 50 đô thị Hoa Kỳ) cho thấy phương pháp đề xuất (Attraction-Weighted/Uniform) đạt độ chính xác vượt trội với chỉ số CPC trung bình từ **0.70 đến 0.84**, cao hơn 15-20% so với các mô hình tham số tốt nhất. Đặc biệt, nghiên cứu phát hiện sự khác biệt rõ rệt trong "lực hấp dẫn" di chuyển: POI đóng vai trò chủ đạo tại các đô thị nén Châu Á, trong khi Dân số lại là biến số ổn định hơn tại các đô thị dàn trải Bắc Mỹ.
+# 3. Introduction
+Các mô hình tương tác không gian truyền thống như Gravity và Radiation từ lâu đã được áp dụng rộng rãi để ước lượng luồng di chuyển (mobility flows) và mang lại nhiều kết quả quan trọng trong quản lý đô thị, dự báo dịch bệnh. Tuy nhiên, khả năng dự báo của các mô hình này vẫn có nhưng giới hạn chưa thể sử dụng hiệu quả cho mọi loại hình đô thị.
+
+Cụ thể, mô hình Gravity gặp trở ngại lớn do các tham số suy giảm khoảng cách phụ thuộc chặt chẽ vào dữ liệu lịch sử, khiến nó mất đi tính linh hoạt khi áp dụng cho các khu vực thiếu dữ liệu quan sát [5,12]. Ngược lại, mô hình Radiation dù có lợi thế không tham số (parameter-free) nhưng lại dựa trên giả định đơn điệu về việc tối ưu hóa khoảng cách để tìm kiếm cơ hội [12,8]. Giả định này không còn phù hợp trong bối cảnh các đô thị hiện đại, nơi sự phân bổ dày đặc của các điểm tiện ích (Points of Interest - POIs) thúc đẩy các hành vi di chuyển vượt ra ngoài quy luật "gần nhất" để thỏa mãn các nhu cầu dịch vụ đa dạng [8].
+
+Với sự phát triển của ngành học máy, học máy sâu, nhiều nghiên cứu gần đây đã chuyển hướng sang các giải pháp dựa trên dữ liệu (Data-driven), kết hợp dữ liệu mở từ OpenStreetMap hoặc ảnh vệ tinh để hiểu cấu trúc không gian chính xác hơn [5,7]. Mặc dù cải thiện đáng kể độ chính xác, nhưng các phương pháp này vẫn đòi hỏi tài nguyên tính toán, dữ liệu huấn luyện đa chiều [5,9]. Nghiên cứu của Atwal đã chỉ ra việc sử dụng dữ liệu mở với sô chiều dữ liệu chỉ 9 thuộc tính ít hơn dữ liệu thực thể 65 nhưng vẫn giải thích được luồng chi chuyển và phương pháp này có tính chuyển giao [11].
+
+Nghiên cứu của chúng tôi đề xuất một hướng tiếp cận mới có thể khắc phục các yếu điểm trên thông qua một mô hình không tham số như mô hình Radiation, sử dụng hàm phân bổ xác suất di chuyển có điều kiện thay cho hàm suy giảm khoảng cách, và cần dữ liệu ít chiều hơn các mô hình học máy.Cụ thể mô hình đề xuất sử dụng khung xác suất di chuyển có điều kiện (conditional mobility probability) tại các vùng quan sát kết hợp với dữ liệu mở của OSM như: POI để phục hồi ma trận Origin-Destination (OD). Bằng cách áp dụng ràng buộc đầu ra (Production-constrained)[1], mô hình cho thấy điểm vượt trội so với các mô hình truyền thống tại các thành phố như Singapore và Seoul.
+
+# 4. Methodology
+Nghiên cứu đề xuất một khung phương pháp luận mới dựa trên sự kết hợp giữa phân bổ xác suất khoảng cách rời rạc và trọng số hấp dẫn từ tiện ích đô thị (POI).
+
+## 4.1 Notation and Nomenclature (Ký hiệu và thuật ngữ)
+Để đảm bảo tính thống nhất trong việc so sánh 6 mô hình, các ký hiệu toán học được quy ước như sau:
+
+| Ký hiệu | Ý nghĩa | Ghi chú |
+| :--- | :--- | :--- |
+| $i, j$ | Các đơn vị phân vùng đô thị | subzones / tracts |
+| $T_{ij}$ | Số lượng thực tế chuyến đi từ $i$ đến $j$ | Số lượng chuyến đi thực tế |
+| $\hat{T}_{ij}$ | Số lượng chuyến ước lượng từ $i$ đến $j$ | Số lượng chuyến đi dự báo |
+| $O_i$ | Tổng lưu lượng xuất phát từ $i$ | $\sum_j T_{ij}$ (Sản lượng - Production) |
+| $r_{ij}$ | Khoảng cách Euclidean ($i \rightarrow j$) | Tính dựa trên tâm hình học (Centroid) |
+| $m_i, n_j$ | Quy mô dân số tại vùng $i$ và $j$ | Dữ liệu từ WorldPop/Tiff 1km |
+| $s_{ij}$ | Cơ hội xen giữa (Intervening Opportunities) | Số lượng dân số trong bán kính $r_{ij}$ |
+| $B_j$ | Tổng số POI của vùng đích $j$ | Lấy từ dữ liệu OpenStreetMap |
+| $D_j$ | Sức hấp dẫn của vùng đích $j$ | Đại diện bởi dân số ($n_j$) hoặc POI ($B_j$) |
+| $A_i$ | Hệ số cân bằng (Balancing Factor) | Đảm bảo ràng buộc điểm nguồn: $\sum_j \hat{T}_{ij} = O_i$ |
+| $\text{bin}_k$ | Dải khoảng cách thứ $k$ | Độ phân giải 1km |
+| $P(bin_k\|i)$ | Xác suất di chuyển vào $bin_k$ từ gốc $i$ | Xác suất thực nghiệm rời rạc |
+| $\alpha, \beta, \gamma$ | Các tham số hiệu chỉnh | Tham số mô hình Gravity / Radiation |
+
+## 4.2 Baseline 1: Gravity Models (Mô hình Trọng trường)
+Mô hình Gravity giả định luồng di chuyển tỷ lệ thuận với quy mô dân số và tỷ lệ nghịch với khoảng cách.
+
+### Công thức tổng quát (Production-Constrained):
+$$ \hat{T}_{ij} = A_i O_i D_j f(r_{ij}) $$
+
+Trong đó $f(r_{ij})$ là hàm suy giảm khoảng cách (thường là $r_{ij}^{-\gamma}$ hoặc $e^{-\gamma r_{ij}}$). Hệ số $A_i = [\sum_j D_j f(r_{ij})]^{-1}$ giúp duy trì ràng buộc sản lượng tại điểm xuất phát.
+
+### Ví dụ minh họa [12]:
+Xét hai cặp địa điểm có đặc điểm dân số và khoảng cách tương đồng để đánh giá độ nhạy của mô hình:
+
+*   **Cặp 1 (Bang Utah - UT):**
+    - Điểm gốc (Davis County): $m_i = 90,000$ người.
+    - Điểm đích (Washington County): $n_j = 240,000$ người.
+    - Khoảng cách: $r_{ij} = 447$ km.
+*   **Cặp 2 (Bang Alabama - AL):**
+    - Điểm gốc (Madison County): $m_i = 89,000$ người.
+    - Điểm đích (Houston County): $n_j = 280,000$ người.
+    - Khoảng cách: $r_{ij} = 410$ km.
+
+**Tham số mô hình:**
+Tham số ước lượng cho mô hình gravity
+$$[\alpha, \beta, \gamma] = \begin{cases}    [0.30, 0.64, 3.05] & \text{ khi } r > 119 \text{ km}, \\
+                            [0.24, 0.14, 0.29] & \text{ khi } r < 119 \text{ km} \end{cases}$$
+Dựa vào khoảng cách giữa điểm gốc vầ điểm đích $r > 119$ km, bộ tham số tối ưu được xác định như sau:
+- $\alpha = 0.24$
+- $\beta = 0.14$
+- $f(r_{ij}) = r_{ij}^{\gamma}$ với $\gamma = 0.29$
+
+**Quy trình tính toán:**
+Thay các giá trị thực tế vào công thức tỷ lệ:
+- Ước lượng luồng di chuyển tại Utah:
+  
+$$ \hat{T}_{UT} = \frac{90.000^{0.24} \times 240.000^{0.14}}{447^{0.29}} = 1.08 \text{ di chuyển} $$
+- Ước lượng luồng di chuyển tại Alabama:
+  
+$$ \hat{T}_{AL} = \frac{89.000^{0.24} \times 280.000^{0.14}}{410^{0.29}} = 1.12 \text{ di chuyển} $$
+
+## 4.3 Baseline 2: Radiation Model (Mô hình Bức xạ)
+Mô hình Radiation dựa trên lý thuyết về các cơ hội xen giữa, không yêu cầu các tham số ước lượng từ dữ liệu lịch sử.
+
+### Công thức tổng quát:
+$$ \hat{T}_{ij} = O_i \times \frac{m_i \times n_j}{(m_i + s_{ij}) \times (m_i + n_j + s_{ij})} $$
+
+Các ký hiệu và ý nghĩa biến số tương tự quy ước tại mục 4.1.
+
+### Ví dụ minh họa:
+
+Theo thống kê thì $O_i = 0.11 \times m_i$
+
+**Trường hợp 1: Bang Utah**
+- Dân số gốc (Davis County): $m_i$ = 90.000
+- Dân số đích (Washington County): $n_j$ = 240.000
+- Dân số xen giữa: $s_{ij}$ = $2 \times 10^6$ 
+- Tổng lượng di chuyển từ điểm nguồn: $O_i = 0.11 \times 90,000 = 9,900$
+
+- Xác suất chọn điểm đến $P_{UT}$:    
+$$P_{UT} = \frac{90,000 \times 240,000}{(90,000 + 2,000,000) \times (90,000 + 240,000 + 2,000,000)} \approx 0.00443$$
+
+Dự báo luồng di chuyển tại Utah: $\hat{T}_{UT} = 9,900 \times 0.00443 \approx 43.9$ di chuyển.
+
+**Trường hợp 2: Bang Alabama**
+- Dân số gốc (Madison County): $m_i$ = 89,000 người
+- Dân số đích (Houston County): $n_j$ = 280,000 người
+- Dân số xen giữa: $s_{ij}$ = $2 \times 10^7$ người
