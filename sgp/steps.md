@@ -74,3 +74,16 @@ Hệ số này đảm bảo rằng $\sum_j T_{ij} = O_i$.
 ## step 9: [DONE]
 - [x] so sánh kết quả 6 mô hình bằng CPC, R^2, MAE, RMSE
 - [x] cap nhat vao REPORT.md
+
+## step 10: [DONE]
+- [x] Thực hiện thử nghiệm **Partial-Training Shell** để kiểm chứng khả năng suy rộng không gian đầu tiên trên Singapore.
+- [x] **Kịch bản 1**: Lấy mẫu ngẫu nhiên (Percentage-based Sampling) với tỷ lệ 1%, 2%, 3%, 4%, 5%, 10%, 20%, 30%, 40%, 50% số lượng vùng khởi hành phục vụ cho việc tính toán $P(\text{bin}_k|i)$ trung bình.
+- [x] Áp dụng phân phối xác suất trung bình $\bar{P}(bin_k)$ từ tập huấn luyện để dự báo cho toàn bộ mạng lưới Singapore.
+- [x] **Kết quả (Origin-Averaged CPC)**: 
+    - 1% Training -> Avg CPC: **0.2447**
+    - 2% Training -> Avg CPC: **0.2909** (Đã đạt mức bão hòa)
+    - 5% Training -> Avg CPC: **0.2897**
+    - 100% (Full Global Law) -> Avg CPC: **0.2812**
+- [x] **Tỷ lệ tối thiểu**: Khoảng **2%** số lượng vùng khởi hành là đủ để mô hình đạt độ chính xác tương đương với quy luật toàn cục 100%. Mặc dù thấp hơn so với mô hình Localized (0.67), nhưng mô hình toàn cục Shell vẫn duy trì tính ổn định vượt trội so với Radiation.
+- [x] Vẽ biểu đồ đường cong tăng trưởng độ chính xác tại [step10_cpc_growth_curve.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step10_cpc_growth_curve.png).
+- [x] Lưu kết quả đánh giá vào file [step10_partial_training_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step10_partial_training_results.csv).

@@ -74,3 +74,11 @@ Hệ số này đảm bảo rằng $\sum_j T_{ij} = O_i$.
 ## step 9: [DONE]
 - [x] so sánh kết quả 6 mô hình (Uniform Null, Attraction-Weighted, Radiation, Radiation POI, Power Decay, Exponential Decay) bằng CPC, R^2, MAE, RMSE
 - [x] cap nhat vao REPORT.md
+
+## step 10: [DONE]
+- [x] Thực hiện thử nghiệm **Partial-Training Shell** để kiểm chứng khả năng suy rộng không gian đầu tiên trên Seoul.
+- [x] **Kịch bản 1**: Lấy mẫu ngẫu nhiên (Percentage-based Sampling) với tỷ lệ 1%, 2%, 3%, 4%, 5%, 10%, 20%, 30%, 40%, 50% số lượng vùng khởi hành phục vụ cho việc tính toán $P(\text{bin}_k|i)$ trung bình.
+- [x] Áp dụng phân phối xác suất trung bình $\bar{P}(bin_k)$ từ tập huấn luyện để dự báo cho toàn bộ mạng lưới Seoul.
+- Tìm ra tỉ lệ phần trăm vùng khởi hành tối thiểu  CPC không còn cái thiện trên 0.5% so với full-training
+- hãy vẽ biểu đồ đường cong tăng trưởng độ chính xác CPC theo tỉ lệ phần trăm vùng khởi hành
+- [x] Lưu kết quả đánh giá vào file [step10_partial_training_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/su/step10_partial_training_results.csv).
