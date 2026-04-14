@@ -8,7 +8,7 @@
 - [x] Dữ liệu lấy từ `detail_pois.geojson` trích xuất ra file ([pois_by_zone.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/pois_by_zone.csv))
 - [x] Tính khoảng cách từ zone ${i}$ đến các zone còn lại, lấy center tới center theo công thức Euclid
 - [x] Các zone $j$ thuộc $bin_k$ (tức là $bin_k$ chứa center của zone $j$)
-- [x] Lấy count(POI) của các zone còn lại là lực hấp thụ ($A_j$)
+- [x] Lấy count(POI) của các zone còn lại là lực hấp thụ ($B_j + \epsilon$)
 - [x] Công thức tính phân bổ xuất phát từ zone ${i}$ đến các zone khác (Logic 2 bước)
 
 ## step 3: [DONE] Version Attraction-Uniform (No POI)
@@ -22,21 +22,17 @@
 - [x] Lưu lại kết quả ([step3_gravity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step3_gravity_results.csv))
 
 ## step 4: [DONE] Version Attraction-Weighted (POI)
-  $$ \hat{T}_{ij} = O_{i} \times P(\text{bin}_{k}) \times \frac{A_j}{\sum_{z \in \text{bin}_{k}} A_z} $$
+  $$ \hat{T}_{ij} = O_{i} \times P(\text{bin}_{k}) \times \frac{B_j+\epsilon}{\sum_{z \in \text{bin}_{k}} (B_z+\epsilon)} $$
   Trong đó:
+  - $\epsilon = 1$
   - $\hat{T}_{ij}$: lượng người di chuyển dự đoán từ zone $i$ đến zone $j$
   - $O_i$: Tổng số lượng di chuyển từ zone $i$
-  - $A_j$: Số POI của zone $j$
+  - $B_j$: Số POI của zone $j$
   - $P(\text{bin}_{k})$: xác suất di chuyển vào khoảng cách bin chứa zone $j$ (từ histogram)
 - [x] Ráp công thức hấp thụ và khuếch tán tính lượng người di chuyển từ zone ${i}$ đến các zone khác
 - [x] Lưu lại kết quả ([step4_gravity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step4_gravity_results.csv))
 
 ## step 5: [DONE]
-- [x] Kiểm tra kết quả dự đoán với dữ liệu thực tế bằng CPC, R^2, MAE, RMSE cho 2 version (Uniform vs Weighted)
-- So sánh kết quả xem có cải thiện version POI so với version no POI không
-- [x] Lưu kết quả ([step5_evaluation_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step5_evaluation_results.csv))
-
-## step 6: [DONE]
 - [x] Hiện thực mô hình radiation (Population-based)
 - [x] pop lấy từ file sgp_pop_2025_CN_1km_R2025A_UA_v1.tif
 ### Công thức tổng quát:
@@ -49,9 +45,13 @@ Trong đó:
 - **$n_j$**: Quy mô dân số tại đích $j$.
 - **$s_{ij}$**: Tổng dân số sinh sống trong vùng tròn tâm $i$ với bán kính $r_{ij}$ (không tính dân số tại $i$ và $j$).
 
-- [x] Lưu kết quả ([step6_radiation_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step6_radiation_results.csv))
+- [x] luu ket qua vao file [step5_radiation_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step5_radiation_results.csv)
 
-## step 7: [DONE]
+- [x] điều chỉnh mô hình radiation theo hướng $m_i = POI + \epsilon$, $n_j = POI + \epsilon$, $s_{ij} = POI + \epsilon$
+- [x] epsilon = 1
+- [x] luu ket qua vao file [step5_radiation_results_poi.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step5_radiation_results_poi.csv)
+
+## step 6: [DONE]
 - [x] Hiện thực mô hình gravity distance decay function (Parametric)
 ### Công thức tổng quát (Production-Constrained):
 $$ T_{ij} = A_i \times O_i \times D_j \times f(r_{ij}) $$
@@ -64,45 +64,23 @@ Trong đó:
 - **$A_i$**: Hệ số cân bằng (Balancing Factor):
 $$ A_i = \frac{1}{\sum_{j} D_j \times f(r_{ij})} $$
 Hệ số này đảm bảo rằng $\sum_j T_{ij} = O_i$.
+- lưu kết quả vào file [step6_gravity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step6_gravity_results.csv)
+- Một version khác $D_j = B_j + \epsilon$ (POI + 1)
+- lưu kết quả vào file [step6_gravity_results_poi.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step6_gravity_results_poi.csv)
 
-- [x] luu ket qua tham so uoc luong vao file [step7_gravity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step7_gravity_results.csv)
 
-## step 8: [DONE]
-- [x] điều chỉnh mô hình radiation ở step 6 theo hướng $s_{ij}$ là tổng POI
-- [x] luu ket qua vao file [step8_radiation_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step8_radiation_results.csv)
-
-## step 9: [DONE]
+## step 7: [DONE]
 - [x] so sánh kết quả 6 mô hình bằng CPC, R^2, MAE, RMSE
 - [x] cap nhat vao REPORT.md
 
-## step 10: [DONE]
+## step 8: [DONE]
 - [x] Thực hiện thử nghiệm **Partial-Training Shell** để kiểm chứng khả năng suy rộng không gian đầu tiên trên Singapore.
-- [x] **Kịch bản 1**: Lấy mẫu ngẫu nhiên (Percentage-based Sampling) với tỷ lệ 1%, 2%, 3%, 4%, 5%, 10%, 20%, 30%, 40%, 50% số lượng vùng khởi hành phục vụ cho việc tính toán $P(\text{bin}_k|i)$ trung bình.
-- [x] Áp dụng phân phối xác suất trung bình $\bar{P}(bin_k)$ từ tập huấn luyện để dự báo cho toàn bộ mạng lưới Singapore.
-- [x] **Kết quả (Origin-Averaged CPC)**: 
-    - 1% Training -> Avg CPC: **0.2447**
-    - 2% Training -> Avg CPC: **0.2909** (Đã đạt mức bão hòa)
-    - 5% Training -> Avg CPC: **0.2897**
-    - 100% (Full Global Law) -> Avg CPC: **0.2812**
-- [x] **Tỷ lệ tối thiểu**: Khoảng **2%** số lượng vùng khởi hành là đủ để mô hình đạt độ chính xác tương đương với quy luật toàn cục 100%. Mặc dù thấp hơn so với mô hình Localized (0.67), nhưng mô hình toàn cục Shell vẫn duy trì tính ổn định vượt trội so với Radiation.
-- [x] Vẽ biểu đồ đường cong tăng trưởng độ chính xác tại [step10_cpc_growth_curve.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step10_cpc_growth_curve.png).
-- [x] Lưu kết quả đánh giá vào file [step10_partial_training_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step10_partial_training_results.csv).
-## step 11: [DONE]
-- [x] Chia Singapore thành 10 cụm (clusters) không gian liền kề bằng K-Means.
-- [x] Thực hiện thử nghiệm **Leave-One-Cluster-Out (LOCO) cross-validation**.
-- [x] Huấn luyện trên 9 cụm và kiểm tra trên cụm thứ 10.
-- [x] **Kết quả**: CPC trung bình đạt **0.5572**. Kết quả này cao vượt trội so với quy luật toàn cục ngẫu nhiên ở step 10, chứng tỏ tầm quan trọng của chiến lược lấy mẫu phân tán.
-- [x] Vẽ bản đồ phân cụm ([step11_spatial_clusters.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step11_spatial_clusters.png)).
+- Dùng giải thuật gom cụm gom các vùng thanh 10 nhóm sao cho các vùng trong nhóm liền kề nhau.
+- Lấy mẫu ngẫu nhiên (Percentage-based Sampling) với tỷ lệ 1%, 2%, 3%, 4%, 5%, 10%, 20%, 30%, 40%, 50% số lượng vùng trong các nhóm để tính toán $P(\text{bin}_k|i)$ trung bình.
+- Nếu tỷ lệ thực tế lớn hơn 1% vì luôn phải chọn ít nhất 1 vùng trong group thì chọn mức tỉ lên cao hơn mức thực tế. Ví dụ mức thực tế là 2.2% thì chọn 3% để bắt đầu.
+- Áp dụng phân phối xác suất $\bar{P}(bin_k)$ của từng nhóm áp dụng cho các vùng thuộc nhóm đó để dự báo cho toàn bộ mạng lưới Singapore.
 
-## step 12: [DONE]
-- [x] Đánh giá quy luật di chuyển nội vùng (Intra-District Law).
-- [x] Sử dụng dữ liệu của chính cụm đó để huấn luyện và dự báo cho các subzone thuộc cụm.
-- [x] **Kết quả**: CPC trung bình đạt **0.5678**.
+- [x] Vẽ biểu đồ đường cong tăng trưởng độ chính xác tại [step8_cpc_growth_curve.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step8_cpc_growth_curve.png).
 
-## step 13: [DONE]
-- [x] Thực hiện **Phân tích độ nhạy toàn diện** (Comprehensive Sensitivity Analysis) trên dải lấy mẫu từ 1% đến 90%.
-- [x] Lấy mẫu đồng thời từ 10 cụm địa lý rải rác.
-- [x] Thực hiện 20 lần lặp cho mỗi tỷ lệ để lấy giá trị trung bình.
-- [x] **Kết quả**: CPC duy trì cực kỳ ổn định ở mức **0.542 - 0.549**, khẳng định tính phổ quát của quy luật Shell Law ngay cả khi dữ liệu cực kỳ thưa thớt (1% subzones).
-- [x] Vẽ biểu đồ đường cong độ nhạy ([step13_sensitivity_curve.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step13_sensitivity_curve.png)).
-- [x] Lưu kết quả vào file [step13_subzone_sensitivity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step13_subzone_sensitivity_results.csv).
+- [x] Lưu kết quả đánh giá vào file [step8_partial_training_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step8_partial_training_results.csv).
+
