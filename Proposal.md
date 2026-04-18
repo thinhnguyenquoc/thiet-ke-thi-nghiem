@@ -150,7 +150,8 @@ Mô hình đề xuất hoạt động dựa trên cơ chế phân bổ hai giai 
 **Giai đoạn 1: Lựa chọn dải khoảng cách (Radial Shell Selection)**
 Lượng chuyến đi từ $i$ trước hết được phân bổ vào các dải khoảng cách $\text{bin}_k$ dựa trên xác suất thực nghiệm $P(\text{bin}_k|i)$.
 
-![Shell Model Selection](shell_model_diagram.png)
+<img src="shell_model_diagram.png" width="70%" id="fig1">
+
 *Hình 1: Minh họa Giai đoạn 1 - Lựa chọn dải khoảng cách dựa trên các vòng tròn đồng tâm (Radial Shells).*
 Ví dụ: Ta có: 
 
@@ -173,7 +174,8 @@ Với $$ P(j|bin_k, i) = \frac{B_j}{\sum_{z \in \text{bin}_{k}} B_z} $$
 
 Trong đó $k$ là dải khoảng cách chứa vùng $j$ tính từ vùng $i$ ($r_{ij} \in \text{bin}_k$).
 
-![Shell Model Selection](intra_bin_allocation_diagram.png)
+<img src="intra_bin_allocation_diagram.png" width="70%" id="fig2">
+
 *Hình 2: Minh họa Giai đoạn 2 - Phân bổ nội bộ dải (Intra-bin Allocation).*
 
 Ví dụ:
@@ -267,6 +269,13 @@ Với $$P(j|bin_k, i) = \frac{B_j+\epsilon}{\sum_{z \in \text{bin}_{k}} (B_z+\ep
 
 *Ghi chú về ước lượng tham số*: Trong nghiên cứu này, chúng tôi thực hiện ước lượng các tham số của mô hình Gravity theo cấu trúc **Singly-Constrained** (ràng buộc điểm nguồn). Để đảm bảo tính tinh gọn và khả năng suy rộng của mô hình, sức hấp dẫn của điểm đích được cố định bằng quy mô dân số ($D_j = n_j$), do đó tham số tự do duy nhất cần ước lượng là hệ số suy giảm khoảng cách $\gamma$. Tham số này được tìm kiếm thông qua giải thuật tối ưu hóa phi tuyến (`scipy.optimize.minimize`) với mục tiêu tối đa hóa chỉ số **CPC (Common Part of Commuters)** trên toàn bộ mạng lưới OD của thành phố. Phương pháp này đảm bảo mô hình không chỉ khớp về mặt thống kê mà còn đạt hiệu quả cao nhất trong việc mô phỏng cấu trúc di chuyển đô thị thực tế.
 
+## 5.3 Đặc tả thử nghiệm bão hòa thông tin và tính ổn định không gian
+Để kiểm chứng khả năng khôi phục quy luật di chuyển từ dữ liệu hạn chế, nghiên cứu thực hiện thử nghiệm **Partial-Training** trên cả 3 tập dữ liệu (SGP, SEO, và USA). Theo đó, các mô hình được huấn luyện với tỷ lệ dữ liệu mẫu giảm dần từ 50% xuống 10%. Đầu tiên các vùng được gom nhóm thành các nhóm sao cho các vùng trong nhóm ở gần nhau. 
+
+$$\text{Số lượng nhóm} = \frac{\text{Tổng số vùng}}{n} \text{ với } n = 2,...,10$$. 
+
+Sau đó, chọn một vùng bất kỳ để tính số xác suất bin và đại diện cho cả nhóm. Cuối cùng tính toán lại toàn bộ ma trận OD với các tham số đã học được. Kết quả sẽ được thống kê cho SGP, SEO, và 10 thành phố đại diện của USA.
+
 # 6. Results
 Nghiên cứu đã thực hiện phân tích đối chiếu trên 52 đô thị với cấu trúc và quy mô khác nhau. Kết quả khẳng định sự thống trị của các mô hình dựa trên cấu trúc vỏ (Shell Models).
 
@@ -291,16 +300,31 @@ Nghiên cứu đã thực hiện phân tích đối chiếu trên 52 đô thị 
 | Gravity (Power-Pop) | Tham số tối ưu | 0.732 | Baseline |
 | Radiation (Pop) | Không tham số | 0.483 | Baseline |
 
-![Average CPC 50 Cities](avg_cpc_50_cities.png)
+<img src="avg_cpc_50_cities.png" width="70%" id="fig3">
+
 *Hình 3: So sánh chỉ số CPC trung bình của các mô hình trên 50 thành phố Hoa Kỳ.*
 
-![CPC Distribution 50 Cities](cpc_distribution_50_cities.png)
+<img src="cpc_distribution_50_cities.png" width="70%" id="fig4">
+
 *Hình 4: Phân phối chỉ số CPC cho thấy tính ổn định vượt trội của các mô hình Shell.*
 
+## 6.3 Thử nghiệm bão hòa thông tin và tính ổn định không gian
+Để kiểm chứng khả năng khôi phục quy luật di chuyển từ dữ liệu hạn chế, nghiên cứu thực hiện thử nghiệm **Partial-Training** trên cả 3 tập dữ liệu (SGP, SEO, và USA). Kết quả cho thấy một quy luật bão hòa thông tin nhất quán tại mốc **10% dữ liệu mẫu**.
+
+<img src="unified_partial_training.png" width="70%" id="fig5">
+
+*Hình 5: Đường cong bão hòa thông tin thể hiện tính ổn định của chỉ số CPC khi giảm tỷ lệ dữ liệu mẫu huấn luyện.*
+
+**Nhận xét**: 
+- **Độ dốc cực thấp**: Ngay cả khi giảm tỷ lệ dữ liệu mẫu từ 50% xuống 10%, chỉ số CPC chỉ giảm trung bình ít hơn **0.02** đơn vị trên cả 3 khu vực.
+- **Tính bão hòa**: Tại mốc 10% dữ liệu, mô hình Shell vẫn đạt được hơn **98% hiệu suất** so với khi có đầy đủ dữ liệu. Điều này khẳng định rằng quy luật di chuyển dải (Shell-based) có tính phổ quát không gian cao, cho phép đại diện cho toàn bộ đô thị chỉ bằng các quan sát tại các cụm khu vực giới hạn.
+- **USA Cities**: Đặc biệt tại các thành phố Hoa Kỳ, CPC duy trì ổn định ở mức cao (~0.79) ngay cả ở tỷ lệ mẫu thấp, chứng minh tính khả thi của mô hình tại các vùng thiếu hụt dữ liệu khảo sát diện rộng.
+
 # 7. Discussion
-- **Xác nhận Quy luật Shell**: Việc mô hình Shell đạt CPC trung bình lên tới 0.79 trên 50 thành phố Hoa Kỳ chứng minh tính phổ quát của quy luật di chuyển dải.
-- **Tính bão hòa thông tin**: Thử nghiệm Partial-Training cho thấy hiệu suất tiệm cận tối đa chỉ với **10% dữ liệu mẫu**.
-- **Giá trị thực tiễn**: Sử dụng dữ liệu mở (POI) giúp nâng cao độ chính xác dự báo mà không cần dữ liệu khảo sát phức tạp.
+Phân tích kết quả thực nghiệm trên 52 thành phố mang lại những kết luận quan trọng:
+- **Sự xác nhận của Quy luật di chuyển phụ thuộc quy mô**: Việc các mô hình dựa trên Shell chiếm ưu thế tuyệt đối (với CPC trung bình lên tới 0.79) minh chứng rằng cấu trúc di chuyển đô thị hiện đại bị chi phối bởi các quy luật phân dải khoảng cách hơn là các hàm suy giảm liên tục đơn giản.
+- **Tính bão hòa thông tin và sự ổn định**: Thử nghiệm Partial-Training (Hình 5) xác nhận quy luật di chuyển có thể được khôi phục chính xác chỉ với **10% dữ liệu mẫu**. Điều này cho thấy quy luật di chuyển dải có tính bao quát cao trong không gian, cho phép khôi phục ma trận OD toàn thành phố từ các quan sát hạn chế.
+- **Tính khả thi của dữ liệu mở**: Việc sử dụng dữ liệu POI từ OSM thay cho dữ liệu dân số truyền thống giúp tăng độ chính xác của mô hình lên đáng kể (weighted vs uniform), đặc biệt là tại các đô thị nén như Singapore và Seoul.
 
 # 8. Conclusion
 Nghiên cứu đã thành công trong việc xây dựng và kiểm chứng khung mô hình di động không tham số dựa trên quy luật Shell. Mô hình mở ra hướng đi mới cho việc dự báo di động tại các đô thị toàn cầu với yêu cầu dữ liệu tối thiểu.
