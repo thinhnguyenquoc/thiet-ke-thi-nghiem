@@ -13,17 +13,21 @@ OUTPUT_FILE = 'step6_radiation_results.csv'
 CITY_CRS = 'EPSG:3414' # SVY21 for Singapore
 
 def main():
-    print("🚀 Step 6 (SINGAPORE): Radiation Model Implementation...")
+    print("🚀 Step 6 (SINGAPORE): Radiation Model Implementation (Population)...")
 
     # 1. Load Geometries
     print("📖 Loading subzone geometries...")
     gdf = gpd.read_file(SZ_SHAPEFILE)
+    gdf['SUBZONE_C'] = gdf['SUBZONE_C'].astype(str).str.strip().str.upper()
     
-    # Calculate centroids for distances (in SVY21 for accuracy)
+    # Calculate centroids
     gdf_utm = gdf.to_crs(CITY_CRS)
     gdf_utm['centroid'] = gdf_utm.geometry.centroid
     
-    centroids_utm = gdf_utm.set_index('SUBZONE_C')['centroid'].to_dict()
+    unique_zones = gdf_utm['SUBZONE_C'].unique()
+    zone_to_idx = {z: i for i, z in enumerate(unique_zones)}
+    idx_to_zone = {i: z for i, z in enumerate(unique_zones)}
+    centroids = gdf_utm.set_index('SUBZONE_C')['centroid']
     
     # 2. Extract Population per Zone
     print("📊 Extracting population from TIFF...")
@@ -42,72 +46,82 @@ def main():
         valid_lons = lons[mask]
         valid_lats = lats[mask]
         
-    print(f"✨ Found {len(valid_pop)} pixels with population data.")
-    
     pixel_gdf = gpd.GeoDataFrame(
         {'pop': valid_pop}, 
         geometry=[Point(x, y) for x, y in zip(valid_lons, valid_lats)],
         crs="EPSG:4326"
     )
     
-    # Zone geometries are in EPSG:4326
-    print("📍 Spatial Join: Mapping pixels to subzones...")
-    joined = gpd.sjoin(pixel_gdf, gdf[['SUBZONE_C', 'geometry']], how="inner", predicate="within")
+    gdf_4326 = gdf.to_crs("EPSG:4326")
+    joined = gpd.sjoin(pixel_gdf, gdf_4326[['SUBZONE_C', 'geometry']], how="inner", predicate="within")
+    joined['SUBZONE_C'] = joined['SUBZONE_C'].astype(str).str.strip().str.upper()
     zone_pop = joined.groupby('SUBZONE_C')['pop'].sum().to_dict()
     
-    gdf_utm['pop_m'] = gdf_utm['SUBZONE_C'].map(zone_pop).fillna(0)
-    print(f"📈 Total population mapped to zones: {gdf_utm['pop_m'].sum():,.0f}")
+    pop_vec = np.array([zone_pop.get(z, 0.0) for z in unique_zones]) + 1.0
+    print(f"📈 Total population mapped to zones: {pop_vec.sum():,.0f}")
     
-    # 3. Load Empirical Trips for T_i (Total departures)
+    # 3. Load Empirical Trips for T_i
     print("📖 Loading empirical trips...")
     trips_df = pd.read_csv(TRIPS_FILE)
+    trips_df['ORIGIN_SUBZONE'] = trips_df['ORIGIN_SUBZONE'].astype(str).str.strip().str.upper()
     t_i_lookup = trips_df.groupby('ORIGIN_SUBZONE')['COUNT'].sum().to_dict()
+    
+    # Pre-calculate Distance Matrix
+    print("📏 Pre-calculating distance matrix...")
+    coords = np.array([[p.x, p.y] for p in gdf_utm['centroid']])
+    dist_mat = np.sqrt(np.sum((coords[:, np.newaxis, :] - coords[np.newaxis, :, :])**2, axis=2)) / 1000.0
     
     # 4. Implement Radiation Model
     print("⚛️ Calculating Radiation Model predictions...")
-    unique_zones = gdf_utm['SUBZONE_C'].unique()
-    zone_pop_dict = gdf_utm.set_index('SUBZONE_C')['pop_m'].to_dict()
-    
     final_results = []
     
-    for count, i_zone in enumerate(unique_zones):
-        if count % 50 == 0:
-            print(f"📍 Processed {count}/{len(unique_zones)} origin zones...")
+    for i_idx, i_zone in enumerate(unique_zones):
+        if i_idx % 100 == 0:
+            print(f"📍 Processed {i_idx}/{len(unique_zones)} origin zones...")
             
         t_i = t_i_lookup.get(i_zone, 0.0)
         if t_i == 0: continue
         
-        m_i = zone_pop_dict.get(i_zone, 0.0)
-        p_i = centroids_utm[i_zone]
+        m_i = pop_vec[i_idx]
+        if m_i == 0: continue # In classic radiation, m_i=0 makes T_ij=0
         
-        # Calculate distances to all other zones
-        temp_df = gdf_utm[gdf_utm['SUBZONE_C'] != i_zone].copy()
-        temp_df['dist'] = temp_df['centroid'].distance(p_i)
+        # Distances from origin i_idx to all other zones
+        dists = dist_mat[i_idx]
         
-        # Sort and cumulative sum for s_ij
-        temp_df = temp_df.sort_values('dist')
-        temp_df['s_ij'] = temp_df['pop_m'].shift(1).fillna(0).cumsum()
+        # Create temp series to calculate s_ij
+        # Sort indices by distance, excluding origin
+        mask = np.ones(len(unique_zones), dtype=bool)
+        mask[i_idx] = False
+        
+        valid_indices = np.arange(len(unique_zones))[mask]
+        valid_dists = dists[mask]
+        valid_pop = pop_vec[mask]
+        
+        # Sort valid indices by distance
+        sort_idx = np.argsort(valid_dists)
+        sorted_pops = valid_pop[sort_idx]
+        sorted_indices = valid_indices[sort_idx]
+        
+        # s_ij = Sum of populations closer than j
+        s_ij_vec = np.concatenate(([0], np.cumsum(sorted_pops)[:-1]))
         
         # Radiation formula
-        # T_ij = T_i * (m_i * n_j) / [(m_i + s_ij) * (m_i + n_j + s_ij)]
-        denom = (m_i + temp_df['s_ij']) * (m_i + temp_df['pop_m'] + temp_df['s_ij'])
-        temp_df['T_hat_ij'] = np.where(denom > 0, t_i * (m_i * temp_df['pop_m']) / denom, 0.0)
+        n_j = sorted_pops
+        denom = (m_i + s_ij_vec) * (m_i + n_j + s_ij_vec)
+        t_hat_ij_vec = np.where(denom > 0, t_i * (m_i * n_j) / denom, 0.0)
         
-        for _, row in temp_df.iterrows():
-            if row['T_hat_ij'] > 0:
+        for k, d_idx in enumerate(sorted_indices):
+            if t_hat_ij_vec[k] > 1e-6:
                 final_results.append({
                     'ORIGIN_ZONE': i_zone,
-                    'DEST_SUBZONE': row['SUBZONE_C'],
-                    'T_hat_ij': row['T_hat_ij']
+                    'DEST_SUBZONE': idx_to_zone[d_idx],
+                    'T_hat_ij': t_hat_ij_vec[k]
                 })
 
     # 5. Save Results
     results_df = pd.DataFrame(final_results)
-    print(f"💾 Saving Step 6 results to {OUTPUT_FILE}...")
     results_df.to_csv(OUTPUT_FILE, index=False)
-    
-    total_predicted = results_df['T_hat_ij'].sum()
-    print(f"✅ Step 6 Global Singapore Complete. Total Predicted Volume: {total_predicted:,.2f}")
+    print(f"✅ Step 6 complete. Total Predicted Volume: {results_df['T_hat_ij'].sum():,.2f}")
 
 if __name__ == "__main__":
     main()

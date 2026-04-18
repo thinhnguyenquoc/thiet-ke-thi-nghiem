@@ -2,128 +2,139 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 import os
-import random
 import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+import random
 
 # Configuration
-BINNED_FILE = 'binned_trips_by_zone.csv'
 SZ_SHAPEFILE = 'sub_zone/data_seoul_subzone.shp'
+BINNED_TRIPS = 'binned_trips_by_zone.csv'
+RAW_TRIPS = 'aggregated_trips.csv'
 POI_FILE = 'pois_by_zone.csv'
-TRIP_FILE = 'aggregated_trips.csv'
-OUTPUT_FILE = 'step10_partial_training_results.csv'
-PLOT_FILE = 'step10_cpc_growth_curve.png'
+OUTPUT_CSV = 'step10_partial_training_results.csv'
+OUTPUT_PLOT = 'step10_cpc_growth_curve.png'
 CITY_CRS = 'EPSG:5179'
 
-def calculate_origin_averaged_cpc(real_df, pred_df):
-    unique_origins = real_df['ORIGIN_SUBZONE'].unique()
-    cpcs = []
-    real_gb = real_df.groupby('ORIGIN_SUBZONE')
-    pred_gb = pred_df.groupby('ORIGIN_SUBZONE')
-    for origin in unique_origins:
-        if origin not in pred_gb.groups:
-            cpcs.append(0.0)
-            continue
-        r_z = real_gb.get_group(origin)[['DEST_SUBZONE', 'COUNT']]
-        p_z = pred_gb.get_group(origin)[['DEST_SUBZONE', 'T_hat_ij']]
-        merged = pd.merge(r_z, p_z, on='DEST_SUBZONE', how='outer').fillna(0)
-        y_true = merged['COUNT'].values
-        y_pred = merged['T_hat_ij'].values
-        intersection = np.sum(np.minimum(y_true, y_pred))
-        total = np.sum(y_true) + np.sum(y_pred)
-        cpcs.append(2.0 * intersection / total if total > 0 else 0.0)
-    return np.mean(cpcs)
+def calculate_global_cpc(actual_df, pred_matrix, all_zones):
+    """Calculates Global CPC using matrix operations for speed."""
+    zone_to_idx = {z: i for i, z in enumerate(all_zones)}
+    actual_matrix = np.zeros((len(all_zones), len(all_zones)))
+    
+    for _, row in actual_df.iterrows():
+        o, d, count = str(row['ORIGIN_SUBZONE']).replace('.0',''), str(row['DESTINATION_SUBZONE']).replace('.0',''), row['COUNT']
+        if o in zone_to_idx and d in zone_to_idx:
+            actual_matrix[zone_to_idx[o], zone_to_idx[d]] = count
+            
+    intersection = np.sum(np.minimum(actual_matrix, pred_matrix))
+    total = np.sum(actual_matrix) + np.sum(pred_matrix)
+    return 2 * intersection / total if total > 0 else 0
 
 def main():
-    print("🚀 Step 10: Expanded Partial-Training Shell Analysis (Seoul)...")
-
+    print("🚀 Step 10: Partial-Training Shell Experiment (Seoul - Random Selection)...")
+    
     # 1. Load Data
-    binned_df = pd.read_csv(BINNED_FILE)
+    gdf = gpd.read_file(SZ_SHAPEFILE)
+    gdf['SUBZONE_C'] = gdf['SUBZONE_C'].astype(str).str.strip().str.replace('.0', '', regex=False)
+    gdf_utm = gdf.to_crs(CITY_CRS).set_index('SUBZONE_C')
+    gdf_utm['cx'] = gdf_utm.geometry.centroid.x
+    gdf_utm['cy'] = gdf_utm.geometry.centroid.y
+
+    print("📖 Loading binned trips for P(d)...")
+    binned_df = pd.read_csv(BINNED_TRIPS)
+    binned_df['ORIGIN_SUBZONE'] = binned_df['ORIGIN_SUBZONE'].astype(str).str.replace('.0', '', regex=False)
+    
+    print("📖 Loading raw trips for CPC validation...")
+    raw_df = pd.read_csv(RAW_TRIPS)
+    raw_df['ORIGIN_SUBZONE'] = raw_df['ORIGIN_SUBZONE'].astype(str).str.replace('.0', '', regex=False)
+    raw_df['DESTINATION_SUBZONE'] = raw_df['DESTINATION_SUBZONE'].astype(str).str.replace('.0', '', regex=False)
+    
     poi_df = pd.read_csv(POI_FILE)
-    gdf = gpd.read_file(SZ_SHAPEFILE).to_crs(CITY_CRS)
-    gdf['SUBZONE_C'] = gdf['SUBZONE_C'].astype(float)
-    gdf = gdf.merge(poi_df[['SUBZONE_C', 'A_j']], on='SUBZONE_C', how='left').fillna(0)
-    gdf['centroid'] = gdf.geometry.centroid
+    poi_df['SUBZONE_C'] = poi_df['SUBZONE_C'].astype(str).str.replace('.0', '', regex=False)
+    attr_dict = poi_df.set_index('SUBZONE_C')['A_j'].to_dict()
+
+    all_zones = gdf_utm.index.values
+    z_count = len(all_zones)
     
-    unique_origins = binned_df['ORIGIN_SUBZONE'].unique()
-    zone_to_idx = {z: i for i, z in enumerate(unique_origins)}
-    subzone_ids = gdf['SUBZONE_C'].values
-    aj_values = gdf['A_j'].values
-    all_centroids = np.array([[c.x, c.y] for c in gdf['centroid']])
+    # Pre-calculate Distance Matrix and A_j vector
+    coords = gdf_utm[['cx', 'cy']].values
+    dist_mat = np.sqrt(np.sum((coords[:, np.newaxis, :] - coords[np.newaxis, :, :])**2, axis=2)) / 1000.0
+    dist_mat = np.where(dist_mat < 0.01, 0.01, dist_mat)
+    aj_vec = np.array([attr_dict.get(z, 0.0) + 1.0 for z in all_zones])
 
-    real_trips = pd.read_csv(TRIP_FILE)[['ORIGIN_SUBZONE', 'DESTINATION_SUBZONE', 'COUNT']]
-    real_trips.rename(columns={'DESTINATION_SUBZONE': 'DEST_SUBZONE'}, inplace=True)
+    # Pre-calculate Actual P_bin for ALL zones
+    print("📊 Pre-calculating empirical P_bin from binned data...")
+    actual_p_bin = {}
+    max_bin_limit = int(dist_mat.max()) + 1
+    for z in all_zones:
+        z_bins = binned_df[binned_df['ORIGIN_SUBZONE'] == z]
+        if z_bins.empty:
+            actual_p_bin[z] = None
+            continue
+        p_vec = np.zeros(max_bin_limit + 1)
+        for _, row in z_bins.iterrows():
+            b, c = row['distance_bin'], row['COUNT']
+            if b <= max_bin_limit: p_vec[int(b)] = c
+        total = p_vec.sum()
+        actual_p_bin[z] = p_vec / total if total > 0 else None
 
-    # 2. Precompute Origin-specific Structures
-    # Pre-calculating bin membership and sum_az for each origin
-    print("📏 Precomputing spatial bins and attraction sums for each origin...")
-    origin_spatial_cache = {}
-    for origin_zone in unique_origins:
-        origin_idx = zone_to_idx[origin_zone]
-        origin_pos = all_centroids[origin_idx]
-        dists = np.sqrt(np.sum((all_centroids - origin_pos)**2, axis=1)) / 1000.0
-        bins = np.floor(dists).astype(int)
+    oi_dict = raw_df.groupby('ORIGIN_SUBZONE')['COUNT'].sum().to_dict()
+
+    # 2. Experiment Loop
+    n_values = [int(z_count/i) for i in [2, 3, 4, 5, 6, 7, 8, 9, 10]]
+    results = []
+
+    for n_clusters in n_values:
+        print(f"🧪 Testing N={n_clusters} clusters (sampling 1 random zone/cluster)...")
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+        gdf_utm['cluster'] = kmeans.fit_predict(coords)
+        cluster_groups = gdf_utm.groupby('cluster').groups
         
-        # Calculate sum of attraction per bin for this origin
-        local_df = pd.DataFrame({'bin_k': bins, 'A_j': aj_values})
-        bin_sums = local_df.groupby('bin_k')['A_j'].sum().to_dict()
-        
-        origin_spatial_cache[origin_zone] = {
-            'bins': bins,
-            'sum_az_list': [bin_sums[b] for b in bins],
-            'o_i': binned_df[binned_df['ORIGIN_SUBZONE'] == origin_zone]['COUNT'].sum()
-        }
+        iter_cpcs = []
+        for i in range(20):
+            sampled_probs = {}
+            for cid, z_indices in cluster_groups.items():
+                valid_indices = [z for z in z_indices if actual_p_bin.get(z) is not None]
+                if not valid_indices:
+                    sampled_probs[cid] = None
+                else:
+                    rep_zone = random.choice(valid_indices)
+                    sampled_probs[cid] = actual_p_bin[rep_zone]
+                
+            pred_matrix = np.zeros((z_count, z_count))
+            for idx, z_o in enumerate(all_zones):
+                cid = gdf_utm.loc[z_o, 'cluster']
+                p_vec = sampled_probs[cid]
+                if p_vec is None: continue
+                
+                o_total = oi_dict.get(z_o, 0)
+                d_bins = dist_mat[idx].astype(int)
+                d_bins = np.clip(d_bins, 0, len(p_vec)-1)
+                
+                raw_probs = p_vec[d_bins] * aj_vec
+                row_sum = raw_probs.sum()
+                if row_sum > 0:
+                    pred_matrix[idx, :] = (raw_probs / row_sum) * o_total
+            
+            cpc = calculate_global_cpc(raw_df, pred_matrix, all_zones)
+            iter_cpcs.append(cpc)
+            
+        avg_cpc = np.mean(iter_cpcs)
+        std_cpc = np.std(iter_cpcs)
+        print(f"   -> Average CPC: {avg_cpc:.4f} (std: {std_cpc:.4f})")
+        results.append({'N_clusters': n_clusters, 'Ratio': n_clusters/z_count, 'CPC': avg_cpc, 'STD': std_cpc})
 
-    # 3. Define Scenarios
-    ratios = [0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1.0]
-    results_record = []
-
-    binned_df['P_bin_k_i'] = binned_df.groupby('ORIGIN_SUBZONE')['COUNT'].transform(lambda x: x / x.sum())
-
-    for ratio in ratios:
-        print(f"🧪 Testing Ratio: {ratio*100}% Training Zones...")
-        if ratio == 1.0:
-            train_zones = unique_origins
-        else:
-            num_train = max(1, int(len(unique_origins) * ratio))
-            train_zones = random.sample(list(unique_origins), num_train)
-        
-        train_df = binned_df[binned_df['ORIGIN_SUBZONE'].isin(train_zones)]
-        avg_dist = train_df.groupby('distance_bin')['P_bin_k_i'].mean().to_dict()
-        
-        all_pred = []
-        for i, origin_zone in enumerate(unique_origins):
-            cache = origin_spatial_cache[origin_zone]
-            p_bin_values = np.array([avg_dist.get(float(b), 0.0) for b in cache['bins']])
-            sum_az_values = np.array(cache['sum_az_list'])
-            mask = (p_bin_values > 0) & (sum_az_values > 0)
-            if not any(mask): continue
-            t_hat_vals = cache['o_i'] * p_bin_values[mask] * (aj_values[mask] / sum_az_values[mask])
-            all_pred.append(pd.DataFrame({
-                'ORIGIN_SUBZONE': origin_zone,
-                'DEST_SUBZONE': subzone_ids[mask],
-                'T_hat_ij': t_hat_vals
-            }))
-        
-        pred_df = pd.concat(all_pred)
-        cpc = calculate_origin_averaged_cpc(real_trips, pred_df)
-        print(f"✅ Ratio {ratio*100}% -> Avg CPC: {cpc:.4f}")
-        results_record.append({'Training_Ratio': ratio, 'CPC': cpc})
-
-    # 4. Save and Plot
-    results_df = pd.DataFrame(results_record)
-    results_df.to_csv(OUTPUT_FILE, index=False)
+    # 3. Save & Plot
+    res_df = pd.DataFrame(results)
+    res_df.to_csv(OUTPUT_CSV, index=False)
     
-    # Plotting
     plt.figure(figsize=(10, 6))
-    plt.plot(results_df['Training_Ratio'] * 100, results_df['CPC'], marker='o', linestyle='-', color='b')
-    plt.axhline(y=0.7623, color='r', linestyle='--', label='Full Training (0.7623)')
-    plt.xlabel('Training Set Percentage (%)')
-    plt.ylabel('CPC Score')
-    plt.title('Seoul Mobility Law: CPC Growth vs. Training Data Ratio')
-    plt.grid(True, which='both', linestyle='--', alpha=0.5)
-    plt.legend()
-    plt.savefig(PLOT_FILE)
-    print(f"📈 Plot saved to {PLOT_FILE}")
+    plt.errorbar(res_df['Ratio']*100, res_df['CPC'], yerr=res_df['STD'], fmt='-o', capsize=5, color='#e67e22', lw=2)
+    plt.title('Mobility Scale Robustness (Seoul)', fontsize=14)
+    plt.xlabel('Percentage of Zones used for P(d) (%)', fontsize=12)
+    plt.ylabel('Global CPC', fontsize=12)
+    plt.grid(True, alpha=0.3)
+    plt.savefig(OUTPUT_PLOT, dpi=300)
+    print(f"✅ Step 10 complete. Results in {OUTPUT_CSV}")
 
 if __name__ == "__main__":
     main()
