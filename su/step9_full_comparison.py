@@ -2,8 +2,6 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 import os
-from PIL import Image
-from shapely.geometry import Point
 
 # Files
 ACTUAL_FILE = 'aggregated_trips.csv'
@@ -12,11 +10,8 @@ S4_FILE = 'step4_gravity_results.csv'
 S6_FILE = 'step6_radiation_results.csv'
 S8_FILE = 'step8_radiation_results.csv'
 S7_PARAMS = 'step7_gravity_results.csv'
-
 SZ_SHAPEFILE = 'sub_zone/data_seoul_subzone.shp'
-POP_TIF = 'kor_pop_2025_CN_1km_R2025A_UA_v1.tif'
 CITY_CRS = 'EPSG:5179'
-
 OUTPUT_METRICS = 'step9_full_comparison.csv'
 SUMMARY_METRICS = 'step9_summary_metrics.csv'
 
@@ -25,136 +20,114 @@ def calculate_metrics(y_true, y_pred):
     intersection = np.sum(np.minimum(y_true, y_pred))
     total = np.sum(y_true) + np.sum(y_pred)
     cpc = 2 * intersection / total if total > 0 else 0
-    
     mae = np.mean(np.abs(y_true - y_pred))
     rmse = np.sqrt(np.mean((y_true - y_pred)**2))
-    
-    ss_res = np.sum((y_true - y_pred)**2)
-    ss_tot = np.sum((y_true - np.mean(y_true))**2)
+    ss_res = np.sum((y_true - y_pred)**2); ss_tot = np.sum((y_true - np.mean(y_true))**2)
     r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
-    
     return cpc, r2, mae, rmse
 
 def main():
-    print("🚀 Step 9: Full 6-Model Comparative Analysis (SEOUL) with MAE/RMSE...")
+    print("🚀 Step 9 (SEOUL): Full 6-Model Comparative Analysis - j != i Constraint adhered")
     
-    # 1. Load Actual Trips
-    actual_df = pd.read_csv(ACTUAL_FILE)
-    actual_df['ORIGIN'] = actual_df['ORIGIN_SUBZONE'].astype(float).astype(int).astype(str)
-    actual_df['DEST'] = actual_df['DESTINATION_SUBZONE'].astype(float).astype(int).astype(str)
-    
-    # 2. Load Existing Model Results
-    print("📖 Loading Shell and Radiation results...")
-    s3_df = pd.read_csv(S3_FILE)
-    s4_df = pd.read_csv(S4_FILE)
-    s6_df = pd.read_csv(S6_FILE) 
-    s8_df = pd.read_csv(S8_FILE) 
-    
-    for df in [s3_df, s4_df, s6_df, s8_df]:
-        df.rename(columns={'ORIGIN_ZONE': 'ORIGIN', 'DEST_SUBZONE': 'DEST'}, inplace=True, errors='ignore')
-        df['ORIGIN'] = df['ORIGIN'].astype(float).astype(int).astype(str)
-        df['DEST'] = df['DEST'].astype(float).astype(int).astype(str)
-
-    # 3. Generate Parametric Decay Flows (Power/Exponential)
-    print("⚛️ Generating Production-Constrained Parametric flows...")
-    params = pd.read_csv(S7_PARAMS).set_index('ModelType')
-    
+    # 1. Load Geometries
     gdf = gpd.read_file(SZ_SHAPEFILE)
-    gdf['SUBZONE_C'] = gdf['SUBZONE_C'].astype(str)
+    gdf['SUBZONE_C'] = gdf['SUBZONE_C'].astype(str).str.strip().str.replace('.0', '', regex=False)
     gdf_utm = gdf.to_crs(CITY_CRS).set_index('SUBZONE_C')
-    gdf_utm['cx'] = gdf_utm.geometry.centroid.x
-    gdf_utm['cy'] = gdf_utm.geometry.centroid.y
-    
-    # Simple population extraction from TIFF for Step 9
-    with Image.open(POP_TIF) as img:
-        pop_data = np.array(img).astype(float)
-        tiepoint = img.tag[33922]; pixel_scale = img.tag[33550]
-        lons = tiepoint[3] + (np.arange(pop_data.shape[1]) + 0.5) * pixel_scale[0]
-        lats = tiepoint[4] - (np.arange(pop_data.shape[0]) + 0.5) * pixel_scale[1]
-        mask = (pop_data > 0)
-        p_coords = np.argwhere(mask)
-        p_gdf = gpd.GeoDataFrame({'p': pop_data[mask]}, geometry=[Point(lons[c[1]], lats[c[0]]) for c in p_coords], crs="EPSG:4326")
-        joined = gpd.sjoin(p_gdf, gdf.to_crs("EPSG:4326")[['SUBZONE_C', 'geometry']], how="inner", predicate="within")
-        zone_pop = joined.groupby('SUBZONE_C')['p'].sum().to_dict()
-
-    gdf_utm['pop'] = gdf_utm.index.map(zone_pop).fillna(0)
-    
     all_zones = gdf_utm.index.values
-    pop_vec = gdf_utm['pop'].values
-    coords = gdf_utm[['cx', 'cy']].values
+    z_count = len(all_zones)
+    zone_to_idx = {z: i for i, z in enumerate(all_zones)}
+    coords = np.array([[p.x, p.y] for p in gdf_utm.geometry.centroid])
     dist_mat = np.sqrt(np.sum((coords[:, np.newaxis, :] - coords[np.newaxis, :, :])**2, axis=2)) / 1000.0
     dist_mat = np.where(dist_mat < 0.01, 0.01, dist_mat)
 
-    # 4. Comparative Evaluation Loop
-    unique_origins = actual_df['ORIGIN'].unique()
-    final_rows = []
+    # 2. Load Actual Trips and Matrix
+    actual_df_raw = pd.read_csv(ACTUAL_FILE)
+    actual_df_raw['O'] = actual_df_raw['ORIGIN_SUBZONE'].astype(str).str.replace('.0', '', regex=False)
+    actual_df_raw['D'] = actual_df_raw['DESTINATION_SUBZONE'].astype(str).str.replace('.0', '', regex=False)
+    
+    actual_matrix = np.zeros((z_count, z_count))
+    for _, row in actual_df_raw.iterrows():
+        if row['O'] in zone_to_idx and row['D'] in zone_to_idx:
+            actual_matrix[zone_to_idx[row['O']], zone_to_idx[row['D']]] = row['COUNT']
+            
+    internal_flows = np.diag(actual_matrix)
+    external_oi = actual_matrix.sum(axis=1) - internal_flows
 
-    p_p = params.loc['Power']; p_e = params.loc['Exponential']
+    # 3. Load Shell/Radiation Model Predictions (which already include GT diagonal)
+    def load_pred_full(f):
+        if not os.path.exists(f): return None
+        df = pd.read_csv(f)
+        m = np.zeros((z_count, z_count))
+        for _, row in df.iterrows():
+            o = str(row['ORIGIN_ZONE']).strip().replace('.0', '')
+            d = str(row['DEST_SUBZONE']).strip().replace('.0', '')
+            c = row['T_hat_ij']
+            if o in zone_to_idx and d in zone_to_idx:
+                m[zone_to_idx[o], zone_to_idx[d]] = c
+        return m
 
-    # Pre-calculate full matrices for efficiency
-    def get_pred_mat(gamma, type='power'):
-        if type == 'power':
-            decay = pop_vec / (dist_mat ** gamma)
-        else:
-            decay = pop_vec * np.exp(-gamma * dist_mat)
-        row_sums = decay.sum(axis=1, keepdims=True)
+    m_uniform = load_pred_full(S3_FILE)
+    m_weighted = load_pred_full(S4_FILE)
+    m_radpop = load_pred_full(S6_FILE)
+    m_radpoi = load_pred_full(S8_FILE)
+
+    # 4. Generate Parametric flows with GT diagonal
+    params = pd.read_csv(S7_PARAMS).set_index('ModelType')
+    p_gamma = params.loc['Power-POI', 'Params']
+    e_gamma = params.loc['Exp-POI', 'Params']
+    
+    # Needs POI for parametric weight
+    poi_attr = pd.read_csv('pois_by_zone.csv')
+    poi_attr['SUBZONE_C'] = poi_attr['SUBZONE_C'].astype(str).str.replace('.0', '', regex=False)
+    aj_vec = np.array([poi_attr.set_index('SUBZONE_C')['A_j'].to_dict().get(z, 0.0) + 1.0 for z in all_zones])
+
+    def solve_gravity(gamma, ftype='power'):
+        decay = (1.0 / (dist_mat ** gamma)) if ftype == 'power' else np.exp(-gamma * dist_mat)
+        weight_mat = decay * aj_vec[np.newaxis, :]
+        np.fill_diagonal(weight_mat, 0)
+        row_sums = weight_mat.sum(axis=1, keepdims=True)
         row_sums[row_sums == 0] = 1.0
-        prob_mat = decay / row_sums
-        return prob_mat
+        prob_mat = weight_mat / row_sums
+        return (prob_mat * external_oi[:, np.newaxis]) + np.diag(internal_flows)
 
-    prob_p = get_pred_mat(p_p['gamma'], 'power')
-    prob_e = get_pred_mat(p_e['gamma'], 'exp')
+    m_power = solve_gravity(p_gamma, 'power')
+    m_exp = solve_gravity(e_gamma, 'exp')
 
-    zone_to_idx = {z: i for i, z in enumerate(all_zones)}
-    oi_series = actual_df.groupby('ORIGIN')['COUNT'].sum()
+    # 5. Evaluation
+    comparison_results = []
+    models = [
+        ('Uniform', m_uniform), ('Weighted', m_weighted), 
+        ('RadPop', m_radpop), ('RadPOI', m_radpoi),
+        ('Power', m_power), ('Exp', m_exp)
+    ]
 
-    for count, origin in enumerate(unique_origins):
-        if count % 100 == 0: print(f"📍 Evaluating origin {count}/{len(unique_origins)}...")
-        
-        actual_z = actual_df[actual_df['ORIGIN'] == origin][['DEST', 'COUNT']].rename(columns={'COUNT': 'ACTUAL'})
-        eval_dict = {'Zone': origin}
-        
-        # 1-4: Load pre-calculated from CSVs
-        models = [('Uniform', s3_df), ('Weighted', s4_df), ('RadPop', s6_df), ('RadPOI', s8_df)]
-        for name, df in models:
-            pred_z = df[df['ORIGIN'] == origin][['DEST', 'T_hat_ij']].rename(columns={'T_hat_ij': 'PRED'})
-            merged = pd.merge(pred_z, actual_z, on='DEST', how='outer').fillna(0)
-            eval_dict[f'{name}_CPC'], eval_dict[f'{name}_R2'], eval_dict[f'{name}_MAE'], eval_dict[f'{name}_RMSE'] = calculate_metrics(merged['ACTUAL'].values, merged['PRED'].values)
-        
-        # 5-6: Production-Constrained Power/Exp using pre-calculated probability matrices
-        o_idx = zone_to_idx.get(origin)
-        if o_idx is not None:
-            o_total = oi_series.get(origin, 0)
-            
-            # Power
-            p_preds = prob_p[o_idx] * o_total
-            merged_p = pd.merge(pd.DataFrame({'DEST': all_zones, 'PRED': p_preds}), actual_z, on='DEST', how='outer').fillna(0)
-            eval_dict['Power_CPC'], eval_dict['Power_R2'], eval_dict['Power_MAE'], eval_dict['Power_RMSE'] = calculate_metrics(merged_p['ACTUAL'].values, merged_p['PRED'].values)
-            
-            # Exp
-            e_preds = prob_e[o_idx] * o_total
-            merged_e = pd.merge(pd.DataFrame({'DEST': all_zones, 'PRED': e_preds}), actual_z, on='DEST', how='outer').fillna(0)
-            eval_dict['Exp_CPC'], eval_dict['Exp_R2'], eval_dict['Exp_MAE'], eval_dict['Exp_RMSE'] = calculate_metrics(merged_e['ACTUAL'].values, merged_e['PRED'].values)
-        
-        final_rows.append(eval_dict)
-    results_df = pd.DataFrame(final_rows)
-    metrics = ['CPC', 'R2', 'MAE', 'RMSE']
-    model_names = ['Uniform', 'Weighted', 'RadPop', 'RadPOI', 'Power', 'Exp']
-    
+    for idx, oz in enumerate(all_zones):
+        if idx % 100 == 0: print(f"📍 Evaluating origin {idx}/{z_count}...")
+        y_true = actual_matrix[idx, :]
+        res = {'Zone': oz}
+        for name, mat in models:
+            if mat is None: continue
+            y_pred = mat[idx, :]
+            cpc, r2, mae, rmse = calculate_metrics(y_true, y_pred)
+            res[f'{name}_CPC'] = cpc
+            res[f'{name}_R2'] = r2
+        comparison_results.append(res)
+
+    results_df = pd.DataFrame(comparison_results)
     summary_data = []
-    for m in model_names:
-        row = {'Model': m}
-        for met in metrics:
-            row[met] = results_df[f'{m}_{met}'].mean()
-        summary_data.append(row)
-    
+    for m in [n for n, _ in models if _ is not None]:
+        summary_data.append({
+            'Model': m,
+            'CPC': results_df[f'{m}_CPC'].mean(),
+            'R2': results_df[f'{m}_R2'].mean()
+        })
     summary_df = pd.DataFrame(summary_data)
-    print("\n🏆 FINAL COMPARISON TABLE:")
+    print("\n🏆 SUMMARY METRICS (SEOUL):")
     print(summary_df)
     
     results_df.to_csv(OUTPUT_METRICS, index=False)
     summary_df.to_csv(SUMMARY_METRICS, index=False)
-    print(f"✅ Full metrics saved to {SUMMARY_METRICS}")
+    print(f"✅ Comparison complete. Results in {SUMMARY_METRICS}")
 
 if __name__ == "__main__":
     main()

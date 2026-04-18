@@ -22,6 +22,10 @@ def main():
     print("📖 Loading aggregated trips...")
     df = pd.read_csv(INPUT_FILE)
     
+    # Filter trips to exclude internal flows (ground truth)
+    print("✂️ Excluding internal flows (i -> i)...")
+    df = df[df['ORIGIN_SUBZONE'] != df['DESTINATION_SUBZONE']]
+    
     # 2. Convert coordinates to standard distance in kilometers
     print("🌍 Projecting coordinates to UTM-K (EPSG:5179)...")
     

@@ -1,0 +1,100 @@
+- Tổng lượng di chuyển từ điểm nguồn: $O_i = 0.11 \times 89,000 = 9,790$ người.
+
+- Xác suất chọn điểm đến $P_{AL}$ :
+$$P_{AL} = \frac{m_i \times n_j}{(m_i + s_{ij}) \times (m_i + n_j + s_{ij})} = \frac{89,000 \times 280,000}{(89,000 + 20,000,000) \times (89,000 + 280,000 + 20,000,000)} \approx 0.00006$$
+
+Dự báo luồng di chuyển tại Alabama: $ \hat{T}_{AL} = 9,790 \times 0.00006 \approx 0.59 \text{ di chuyển} $
+
+**Kết quả**:
+- Dữ liệu thực tế quan sát được:
+    $T_{UT} = 44 \text{ di chuyển} $ 
+    $T_{AL} = 6 \text{ di chuyển}$
+- Điều này cho thấy mô hình radiation có thể phản ánh được quy mô dân số và cơ hội xen giữa của các vùng - ảnh hưởng của không gian lân cận, tránh được việc bị phụ thuộc quá mức vào chỉ số khoảng cách. Nhờ đó cho kết quả tốt hơn mô hình gravity trong trường hợp này.
+
+## 4.4 Probability Distribution of Trip Lengths
+Thay vì giả định một hàm suy giảm khoảng cách liên tục (như hàm Power hay Exponential), nghiên cứu này sử dụng phân bổ xác suất thực nghiệm rời rạc. 
+
+Với mỗi vùng $i$, ta xác định khoảng cách với các vùng $j$ con lại. Sau đó, các vùng $j$ được gom vào các dải khoảng cách $bin_k$ dựa trên khoảng cách từ vùng $i$ đến vùng $j$. Độ rộng mỗi $bin_k$ được chọn là 1km để số lượng bin không quá lớn tránh tình trạng có quá nhiều bin không có dữ liệu làm sai lệch thống kê. 
+
+Ví dụ: 
+- Cặp di chuyển có bán kính $r_{ij}$ = 1.1 km thì thuộc $bin_1$
+- Cặp di chuyển có bán kính $r_{ij}$ = 2.1 km thì thuộc $bin_2$
+- Cặp di chuyển có bán kính $r_{ij}$ = 3.1 km thì thuộc $bin_3$
+
+### 4.4.1 Mục tiêu kiểm chứng (Verification Goal)
+Việc xác định $P(\text{bin}_k|i)$ trong nghiên cứu này đóng vai trò như một bước **kiểm chứng thực nghiệm (Validation)**. Mục tiêu chưa phải là dự báo luồng di chuyển cho các khu vực thiếu thông tin, mà là để chứng minh giả thuyết: *Nếu ta có thể nắm bắt được quy luật phân bổ xác suất di chuyển của một người khi biết vị trị hiện tại đến điểm đích, liệu ta có thể tái tạo (reconstruct) chính xác ma trận OD thực tế bằng cách kết hợp nó với dữ liệu POI hay không?*
+
+Xác suất này được tính toán trực tiếp từ dữ liệu quan sát để thiết lập một "giới hạn trên" về độ chính xác mà mô hình có thể đạt được khi tích hợp đầy đủ thông tin về khoảng cách và lực hấp dẫn đô thị.
+
+**Ví dụ minh họa quy trình tái tạo:**
+- Với xác suất $P(bin_1|i) = 0.2$.
+- Nếu điểm nguồn $i$ có tổng lưu lượng $O_i = 1000$ chuyến, mô hình sẽ kiểm chứng xem việc phân bổ 200 chuyến đi ($1000 \times 0.2$) vào các vùng đích trong dải $bin_1$ dựa trên trọng số POI có khớp với thực tế hay không.
+- Quá trình này được thực hiện lặp lại cho toàn bộ các dải khoảng cách để tái tạo lại cấu trúc di chuyển của toàn thành phố.
+
+### 4.4.2 Cách xác định xác suất thực nghiệm
+$$ P(\text{bin}_k|i) = \frac{\sum_{j \in \text{bin}_k} T_{ij}}{\sum_{j} T_{ij}} = \frac{\sum_{j \in \text{bin}_k} T_{ij}}{O_i}  $$
+
+**Ví dụ về cách xác định xác suất:**
+- Giả sử tại một vùng $i$ cụ thể có tổng số lượng di chuyển là $10.000$ chuyến ($O_i = 10.000$).
+- Số lượng chuyến đi thực tế quan sát được từ $i$ đến các vùng đích trong dải khoảng cách 1-2km ($bin_1$) là $2.000$ chuyến.
+- Khi đó, xác suất thực nghiệm có điều kiện cho dải $bin_1$ là: $P(bin_1|i) = 2.000 / 10.000 = 0.2$.
+- Số lượng di chuyển từ $i$ đến các vùng đích trong dải khoảng cách 2-3km ($bin_2$) là $3.000$ chuyến.
+- Khi đó, xác suất thực nghiệm có điều kiện cho dải $bin_2$ là: $P(bin_2|i) = 3.000 / 10.000 = 0.3$.
+- Số lượng di chuyển từ $i$ đến các vùng đích trong dải khoảng cách 3-4km ($bin_3$) là $5.000$ chuyến.
+- Khi đó, xác suất thực nghiệm có điều kiện cho dải $bin_3$ là: $P(bin_3|i) = 5.000 / 10.000 = 0.5$.
+
+## 4.5 Proposed Model: Attraction-Weighted Shell Model
+Mô hình đề xuất hoạt động dựa trên cơ chế phân bổ hai giai đoạn (Two-step allocation):
+
+**Giai đoạn 1: Lựa chọn dải khoảng cách (Radial Shell Selection)**
+Lượng chuyến đi từ $i$ trước hết được phân bổ vào các dải khoảng cách $\text{bin}_k$ dựa trên xác suất thực nghiệm $P(\text{bin}_k|i)$.
+
+**Giai đoạn 2: Phân bổ nội bộ dải (Intra-bin Allocation)**
+Trong mỗi dải $\text{bin}_k$, các chuyến đi được phân bổ cho các vùng đích $j$ dựa trên tỷ trọng POI của vùng đó so với tổng POI của tất cả các vùng cùng nằm trong cùng dải.
+
+Công thức tổng quát của mô hình **Attraction-Weighted**:
+
+$$ \hat{T}_{ij} = O_{i} \times P(\text{bin}_{k}|i) \times P(j|bin_k, i) $$
+
+Với $$ P(j|bin_k, i) = \frac{B_j}{\sum_{z \in \text{bin}_{k}} B_z} $$
+
+Trong đó $k$ là dải khoảng cách chứa vùng $j$ tính từ vùng $i$ ($r_{ij} \in \text{bin}_k$).
+
+Ví dụ:
+- Điểm nguồn i có tổng lượng di chuyển là $O_i$ = 1000 di chuyển
+- Xác suất di chuyển đến $bin_1$ là $P(bin_1|i) = 0.2$
+- Xác suất di chuyển đến $bin_2$ là $P(bin_2|i) = 0.3$
+- Xác suất di chuyển đến $bin_3$ là $P(bin_3|i) = 0.5$
+- Tổng POI của các vùng trong $bin_1$ là $B_{bin_1} = \sum_{z \in bin_1} B_z = 100$
+- Vùng đích 1 thuộc $bin_1$ có POI là $B_{1} = 20$
+- Vùng đích 2 thuộc $bin_1$ có POI là $B_{2} = 30$
+- Vùng đích 3 thuộc $bin_1$ có POI là $B_{3} = 50$
+- Ước lượng số di chuyển đến vùng $j=1$ là:
+
+$$ \hat{T}_{i1} = O_{i} \times P(\text{bin}_{1}|i) \times P(1|bin_1, i) = O_{i} \times P(\text{bin}_{1}|i) \times \frac{B_{1}}{B_{bin_{1}}} $$
+
+$$ \hat{T}_{i1} = 1000 \times 0.2 \times \frac{20}{100} = 40 \text{ di chuyển} $$
+- Ước lượng số di chuyển đến vùng $j=2$ là:
+
+$$ \hat{T}_{i2} = O_{i} \times P(\text{bin}_{1}|i) \times P(2|bin_1, i) = O_{i} \times P(\text{bin}_{1}|i) \times \frac{B_{2}}{B_{bin_{1}}} $$
+
+$$ \hat{T}_{i2} = 1000 \times 0.2 \times \frac{30}{100} = 60 \text{ di chuyển} $$
+- Ước lượng số di chuyển đến vùng $j=3$ là:
+
+$$ \hat{T}_{i3} = O_{i} \times P(\text{bin}_{1}|i) \times P(3|bin_1, i) = O_{i} \times P(\text{bin}_{1}|i) \times \frac{B_{3}}{B_{bin_{1}}} $$
+
+$$ \hat{T}_{i3} = 1000 \times 0.2 \times \frac{50}{100} = 100 \text{ di chuyển} $$
+
+### 4.4 Thiết kế thực nghiệm kiểm chứng khả năng suy rộng (Spatial Generalization)
+Thử nghiệm này đánh giá tính ổn định của khung mô hình Shell khi "quy luật di chuyển" $P(bin_k|i)$ được trích xuất từ các nguồn dữ liệu không đầy đủ hoặc bị giới hạn về không gian.
+
+#### 4.4.1 Kịch bản huấn luyện theo tỷ lệ (Percentage-based Sampling)
+Chúng tôi thực hiện mô phỏng việc thiếu hụt dữ liệu bằng cách chia tập hợp các vùng khởi hành $I$ thành hai tập rời nhau: Tập huấn luyện $I_{train}$ và tập kiểm thử $I_{test}$.
+- **Quy trình**: Tập $I_{train}$ được lấy mẫu ngẫu nhiên với tỷ lệ $\rho\%$ tổng số vùng (ví dụ $\rho \in \{10, 20, 50, 80\}$).
+- **Ước lượng quy luật toàn cục**: Một phân phối xác suất trung bình $\bar{P}(bin_k)$ được xây dựng từ tập huấn luyện:
+  $$ \bar{P}(bin_k | I_{train}) = \frac{1}{|I_{train}|} \sum_{i \in I_{train}} P(bin_k|i) $$
+- **Ứng dụng**: Sử dụng $\bar{P}(bin_k | I_{train})$ làm thông số đầu vào cố định cho tất cả các vùng $i \in I_{test}$ để dự báo luồng di chuyển đến các đích $j$.
+
+#### 4.4.2 Kịch bản huấn luyện theo đơn vị hành chính (District-based Sampling)
+Kịch bản này mô phỏng tình huống thực tế khi nhà quản lý chỉ có dữ liệu khảo sát tại một vài khu vực (quận/huyện) nhất định và cần dự báo nhu cầu cho các khu vực còn lại:
+- **Huấn luyện**: Chỉ sử dụng các vùng $i$ thuộc một số quận đặc trưng (ví dụ: khu vực CBD hoặc khu dân cư tập trung).

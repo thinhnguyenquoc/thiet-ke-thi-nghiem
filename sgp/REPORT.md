@@ -8,7 +8,7 @@ This report summarizes a city-wide evaluation of human mobility models for Singa
 ## 1. Study Profile
 - **Geography**: Singapore (323 Planning Subzones).
 - **Coordinate System**: **EPSG:3414 (SVY21)**, optimized for Singapore.
-- **POI Dataset**: Extracted from OSM including retail, amenity, and transport features.
+- **POI Dataset**: Extracted from OSM including retail, amenity, and transport features (Total POIs: 59,704).
 
 ---
 
@@ -21,27 +21,29 @@ This report summarizes a city-wide evaluation of human mobility models for Singa
 | **Exponential Decay** | Parametric | Gravity + $e^{-\gamma r}$ | Population mass |
 | **Power Decay** | Parametric | Gravity + $r^{-\gamma}$ | Population mass |
 | **Attraction-Uniform**| Structural | 1km Shell Constraint | Equal allocation |
-| **Attraction-Weighted**| **Full Logic** | **Shells + POIs ($A_j$)** | **POI attraction** |
+| **Attraction-Weighted**| **Proposed** | **Shells + POIs ($A_j$)** | **POI attraction** |
 
 ---
 
-## 3. Comparative Results (Singapore Average)
+## 3. Comparative Results (Singapore City-Wide Average)
 
-The results demonstrate a clear hierarchy where discrete structural models outperform smooth analytical curves in capturing Singapore's dense urban layout.
+The study reveals a strong hierarchical improvement in spatial overlap (CPC) as we move from functional models to discrete structural models. In Singapore, our proposed Scale-Dependent Mobility Law (Attr-Weighted) achieves the highest precision.
 
-| Model Version | **CPC** | **$R^2$** | **MAE** (Trips) | **RMSE** (Trips) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Radiation (Pop)** | 0.1822 | -9.75 | 107.83 | 625.39 |
-| **Radiation (POI)** | 0.2681 | -8.95 | 110.10 | 697.22 |
-| **Exponential Decay** | **0.4948** | **0.04** | **70.50** | **195.81** |
-| **Power Decay** | **0.4449** | **0.07** | **78.31** | **226.67** |
-| **Attraction-Uniform**| 0.6027 | 0.53 | 57.26 | 146.78 |
-| **Attraction-Weighted**| **0.6764** | **0.63** | **44.96** | **124.02** |
+| Model Version | Mass/Attraction | **CPC** | **$R^2$** | **MAE** (Trips) | **RMSE** |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Radiation** | Population | 0.2015 | -17.18 | 116.51 | 790.91 |
+| **Radiation** | **POI ($A_j$)** | 0.2730 | -10.48 | 102.00 | 622.76 |
+| **Power Decay** | Population | 0.4449 | 0.07 | 78.31 | 226.67 |
+| **Power Decay** | **POI ($A_j$)** | 0.5234 | 0.07 | 67.12 | 220.75 |
+| **Exponential Decay** | Population | 0.4948 | 0.04 | 70.49 | 195.80 |
+| **Exponential Decay** | **POI ($A_j$)** | 0.5809 | 0.34 | 59.11 | 170.23 |
+| **Attraction-Uniform** | Shell Layout | 0.6027 | 0.53 | 57.26 | 146.78 |
+| **Attraction-Weighted**| **Shells + POIs** | **0.6767** | **0.63** | **44.93** | **123.90** |
 
 ### Key Insights:
-- **Spatial Accuracy**: Using empirical **1km distance shells** (Attraction-Uniform, 0.603 CPC) doubles the spatial overlap compared to the best analytical model (Power Law, 0.305 CPC).
-- **Urban Refinement**: The addition of POI data (Attraction-Weighted) reduces the MAE from 57 to **45 trips**, a further **21% reduction in error**.
-- **Radiation Improvement**: Switching from population to POIs in the Radiation model significantly improved CPC from **0.18** to **0.27**, similar to the trend observed in Seoul.
+- **Superiority of Scale-Dependent Law**: Mô hình **Attraction-Weighted** đạt CPC cao nhất (**0.677**), khẳng định việc sử dụng cấu trúc khoanh vùng (shells) kết hợp với trọng số POI giúp mô phỏng chính xác nhất hành vi di chuyển trong đô thị nén như Singapore.
+- **Parametric Comparison**: Mô hình **Exponential POI** (CPC 0.58) vượt trội hơn hẳn so với Radiation (CPC 0.27), cho thấy khoảng cách địa lý đóng vai trò quan trọng hơn "cơ hội xen kẽ" trong cấu trúc di chuyển ngắn của Singapore.
+- **POI Significance**: Trong tất cả các loại mô hình, việc tích hợp dữ liệu POI (59,704 điểm) giúp cải thiện đáng kể độ chính xác so với chỉ dùng dữ liệu dân số. Đặc biệt, Gravity POI (0.58) so với Gravity Pop (0.49).
 
 ---
 

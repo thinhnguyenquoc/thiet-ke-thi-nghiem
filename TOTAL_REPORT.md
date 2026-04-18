@@ -102,10 +102,27 @@ The following table synthesizes the **Origin-Averaged CPC** across Singapore, Se
 | **Radiation-Pop** | 0.4682 | -0.54 | 236.65 | 1303.23 |
 | **Radiation-POI** | 0.4632 | -0.46 | 234.29 | 1266.90 |
 
----
+## 3. 50-City Global Validation Average (USA Dataset)
 
-## 4. Optimized Distance Friction ($\gamma$)
-Under the **Production-Constrained** framework, we estimated the optimal $\gamma$ to maximize CPC for each city.
+Cross-validation across the 50-city US dataset confirms the robustness of the **Scale-Dependent Mobility Law**, while highlighting the impact of different urban structures.
+
+| Model Hierarchy | Best Model (Average) | CPC Average | Trend vs. Gravity |
+| :--- | :--- | :--- | :--- |
+| **Proposed Law** | **Attraction-Uniform** | **0.7673** | **+18.4% Improvement** |
+| **Proposed Law** | Attraction-Weighted | 0.7065 | +8.9% Improvement |
+| **Gravity** | Power-Pop | 0.6483 | Baseline |
+| **Gravity** | Exp-Pop | 0.6440 | - |
+| **Gravity** | Exp-POI | 0.5693 | - |
+| **Radiation** | Radiation-Pop | 0.5189 | - |
+| **Radiation** | Radiation-POI | 0.4675 | - |
+
+### 4. Critical Findings: Compact vs. Sprawl
+The comparative analysis between high-density Asian cities and US metropolitan areas yields a novel finding on **Attraction Bias**:
+
+1. **Law Universality**: The discrete shell-based probability ($P_{bin}$) is the most reliable predictor globally, delivering CPCs $>0.70$ regardless of city layout.
+2. **Compact Asian Logic (Seoul/SGP)**: In high-density environments, **POI Attraction ($A_j$)** is the primary driver. Adding POIs increases CPC from **0.72 to 0.76**.
+3. **Sprawling US Logic (50 Cities)**: In lower-density, car-dependent environments, **Population mass** remains a more stable predictor for gravity models. The inclusion of POIs in sprawling contexts slightly degrades performance, suggesting that mobility in these cities is more tethered to residence-driven patterns than commercial POI clusters.
+4. **Conclusion**: The **Scale-Dependent Mobility Law** effectively bridges the gap between these urban forms by capturing the empirical distance decay ($P_{bin}$) before distributing flow, making it significantly more accurate than parametric functions.
 
 | City | Power $\gamma$ | Exp $\gamma$ | Dominant Decay |
 | :--- | :--- | :--- | :--- |

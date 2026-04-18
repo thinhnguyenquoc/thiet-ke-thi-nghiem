@@ -1,0 +1,100 @@
+| **Attraction-Weighted**| **Shells + POIs** | **0.7623** | **0.77** | **1,154.30** |
+| **Attraction-Uniform** | Shell Layout | 0.7205 | 0.73 | 1,387.03 |
+| **Exponential Decay** | **POI ($B_j$)** | **0.6674** | **0.70** | **1,521.82** |
+| **Exponential Decay** | Population | 0.6058 | 0.63 | 1,997.44 |
+| **Power Decay** | **POI ($B_j$)** | **0.5787** | 0.32 | 1,942.15 |
+| **Power Decay** | Population | 0.5311 | 0.46 | 2,376.05 |
+| **Radiation** | **POI ($B_j$)** | 0.3673 | -5.29 | 3,159.82 |
+| **Radiation** | Population | 0.3073 | -5.02 | 3,302.96 |
+
+#### 5.3.3 Các thành phố Hoa Kỳ tiêu biểu (Featured US Cities)
+
+**🇺🇸 Albuquerque (ABQ)**
+| Phiên bản mô hình | Lực hút ($D_j$) | **CPC** | **$R^2$** | **MAE** |
+| :--- | :--- | :--- | :--- | :--- |
+| **Attraction-Uniform** | Shell Layout | **0.8028** | **0.89** | **270.13** |
+| **Attraction-Weighted**| Shells + POIs | 0.7944 | 0.89 | 281.54 |
+| **Power Decay** | Population | 0.7142 | 0.77 | 391.34 |
+| **Power Decay** | **POI ($B_j$)** | 0.6583 | 0.68 | 445.12 |
+| **Exponential Decay** | Population | 0.6846 | 0.54 | 431.80 |
+| **Exponential Decay** | **POI ($B_j$)** | 0.6446 | 0.51 | 485.34 |
+| **Radiation** | Population | 0.4986 | - | - |
+
+**🇺🇸 Arlington (ARL)**
+| Phiên bản mô hình | Lực hút ($D_j$) | **CPC** | **$R^2$** | **MAE** |
+| :--- | :--- | :--- | :--- | :--- |
+| **Attraction-Weighted**| Shells + POIs | **0.8371** | **0.94** | **355.03** |
+| **Attraction-Uniform** | Shell Layout | 0.8289 | 0.87 | 372.81 |
+| **Exponential Decay** | Population | 0.7436 | 0.74 | 558.76 |
+| **Exponential Decay** | **POI ($B_j$)** | 0.7109 | 0.70 | 612.45 |
+| **Power Decay** | Population | 0.7053 | 0.65 | 685.12 |
+| **Power Decay** | **POI ($B_j$)** | 0.6778 | 0.61 | 742.34 |
+
+**🇺🇸 Atlanta (ATL)**
+| Phiên bản mô hình | Lực hút ($D_j$) | **CPC** | **$R^2$** | **MAE** |
+| :--- | :--- | :--- | :--- | :--- |
+| **Attraction-Weighted**| Shells + POIs | **0.7674** | **0.81** | **234.99** |
+| **Attraction-Uniform** | Shell Layout | 0.7516 | 0.70 | 250.95 |
+| **Power Decay** | Population | 0.6846 | 0.68 | 290.12 |
+| **Power Decay** | **POI ($B_j$)** | 0.6451 | 0.62 | 345.67 |
+| **Exponential Decay** | Population | 0.6812 | 0.65 | 305.45 |
+| **Exponential Decay** | **POI ($B_j$)** | 0.6490 | 0.60 | 368.12 |
+
+### 5.4 Các phát hiện chính
+- **Tính phổ quát của cấu trúc Shell**: Việc sử dụng các dải khoảng cách thực nghiệm (Shells) giúp đạt CPC trung bình toàn cầu là **0.74**, vượt trội hơn hẳn các hàm suy giảm liên tục truyền thống.
+Kết quả trung bình trên 50 thành phố Hoa Kỳ cho thấy một thứ bậc hiệu suất rõ rệt, trong đó các mô hình Shell đề xuất (P_bin) chiếm ưu thế tuyệt đối:
+
+1.  **Attraction-Uniform (Best Average)**: Đạt CPC trung bình **0.767**, dẫn đầu tại 62% số thành phố.
+2.  **Attraction-Weighted**: Đạt CPC trung bình **0.706**.
+3.  **Gravity (Power/Exp - Pop)**: Đạt CPC trung bình **0.64**.
+4.  **Gravity (Power/Exp - POI)**: Đạt CPC trung bình **0.56**.
+5.  **Radiation (Pop/POI)**: Đạt CPC trung bình **0.46 - 0.51**.
+
+**Phát hiện về hình thái đô thị (Urban Form Analysis):**
+Nghiên cứu chỉ ra sự tương phản thú vị giữa các đô thị nén (Seoul/Singapore) và các đô thị dàn trải (USA):
+*   Tại **Seoul/Singapore**: POI là yếu tố sống còn, việc thêm POI giúp tăng CPC Gravity lên ~10% và mô hình Shell lên ~5%.
+*   Tại **USA**: Dân số (Population) là biến số đại diện ổn định hơn. Tại các đô thị dàn trải, di chuyển bị chi phối bởi mật độ cư trú hơn là sự tập trung POI thương mại. Tuy nhiên, bất kể loại hình đô thị nào, cấu trúc **P_bin (Shells)** vẫn luôn cho kết quả vượt trội hơn hẳn các hàm toán học truyền thống.
+
+![Average CPC 50 Cities](avg_cpc_50_cities.png)
+| City | Att-Weighted | Att-Uniform | Pow-Pop | Pow-POI | Exp-Pop | Exp-POI | Rad-Pop | Rad-POI |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Austin | **0.8279** | 0.6792 | 0.6469 | 0.5739 | 0.5679 | 0.3146 | 0.5333 | 0.5012 |
+| Fresno | 0.7519 | **0.8166** | 0.7074 | 0.5372 | 0.7211 | 0.4937 | 0.5372 | 0.4937 |
+| Houston | 0.4587 | **0.7519** | 0.5055 | 0.3697 | 0.4862 | 0.2481 |
+| Indianapolis | 0.6564 | **0.7667** | 0.6542 | 0.6374 | 0.4909 | 0.3861 |
+| Jacksonville | 0.5996 | **0.7970** | 0.6788 | 0.6476 | 0.4989 | 0.3304 |
+| Kansas City | **0.7965** | 0.7904 | 0.6461 | 0.6440 | 0.5304 | 0.5269 |
+| Las Vegas | 0.7317 | **0.7749** | 0.6608 | 0.6551 | 0.5585 | 0.5013 |
+| Long Beach | **0.7592** | 0.7490 | 0.6869 | 0.6878 | 0.5469 | 0.5508 |
+| Los Angeles | 0.6030 | **0.6905** | 0.3477 | 0.3110 | 0.4284 | 0.3547 |
+| Louisville | **0.7899** | 0.7712 | 0.7143 | 0.7048 | 0.5521 | 0.5299 |
+| Memphis | 0.7390 | **0.7826** | 0.6554 | 0.6797 | 0.4702 | 0.4146 |
+| Mesa | **0.7992** | 0.7988 | 0.6951 | 0.6734 | 0.5817 | 0.5728 |
+| Miami | **0.7576** | 0.7357 | 0.7009 | 0.6780 | 0.5478 | 0.5488 |
+| Milwaukee | **0.7355** | 0.7275 | 0.6358 | 0.6461 | 0.4889 | 0.4776 |
+| Minneapolis | **0.7583** | 0.7338 | 0.6816 | 0.7080 | 0.5435 | 0.5342 |
+| Nashville | 0.6859 | **0.7881** | 0.6607 | 0.6417 | 0.4908 | 0.3991 |
+| New York | 0.5786 | **0.6223** | 0.2966 | 0.2905 | 0.3353 | 0.3084 |
+| Oakland | **0.7422** | 0.7227 | 0.6536 | 0.6996 | 0.4989 | 0.5007 |
+| Oklahoma City | 0.6215 | **0.7705** | 0.6276 | 0.6383 | 0.4829 | 0.3519 |
+| Omaha | 0.7861 | **0.7918** | 0.6746 | 0.7187 | 0.5068 | 0.4716 |
+| Philadelphia | 0.6152 | **0.7015** | 0.5592 | 0.5062 | 0.4233 | 0.3882 |
+| Phoenix | 0.6647 | **0.7622** | 0.5239 | 0.4151 | 0.4937 | 0.4247 |
+| Portland | 0.6439 | **0.7749** | 0.6680 | 0.6910 | 0.5069 | 0.3945 |
+| Raleigh | **0.8419** | 0.8362 | 0.7220 | 0.7123 | 0.5759 | 0.5498 |
+| Sacramento | **0.8006** | 0.7855 | 0.6942 | 0.6806 | 0.5850 | 0.5671 |
+| San Antonio | 0.7408 | **0.7774** | 0.6214 | 0.5847 | 0.4790 | 0.4395 |
+| San Diego | 0.6512 | **0.7225** | 0.5498 | 0.4996 | 0.4743 | 0.3868 |
+| San Francisco | 0.5686 | **0.6769** | 0.6391 | 0.6612 | 0.4099 | 0.3089 |
+| San Jose | 0.7174 | **0.7593** | 0.6430 | 0.6568 | 0.5112 | 0.4532 |
+| Seattle | 0.5352 | **0.7549** | 0.6609 | 0.6695 | 0.5138 | 0.3153 |
+| Tampa | **0.8270** | 0.8119 | 0.6710 | 0.6541 | 0.5468 | 0.5491 |
+| Tucson | **0.8210** | 0.8017 | 0.6922 | 0.7067 | 0.4987 | 0.4909 |
+| Tulsa | **0.8254** | 0.8242 | 0.6996 | 0.7233 | 0.4850 | 0.4772 |
+| Virginia Beach | 0.7749 | **0.8101** | 0.7030 | 0.7035 | 0.5127 | 0.4408 |
+| Washington DC | **0.7351** | 0.6856 | 0.6171 | 0.6127 | 0.4744 | 0.4747 |
+| Wichita | 0.7838 | **0.8062** | 0.7194 | 0.7395 | 0.5003 | 0.4571 |
+
+#### 5.3.4 Phân tích tổng hợp 50 thành phố Hoa Kỳ
+Phân tích kết quả trên 50 thành phố Hoa Kỳ mang lại các số liệu thống kê quan trọng về khả năng dự báo của các mô hình:
+

@@ -1,76 +1,87 @@
-## step 1: [DONE]
-- [x] Mỗi zone lập histogram chia bin giả sử 1 bin 1km.
-- [x] Dữ liệu lấy từ `data_trip_sum.csv`
-- [x] Lưu thông tin vào file csv ([binned_trips_by_zone.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/binned_trips_by_zone.csv))
+# Quy trình Mô hình hóa Di động Singapore (Standardized Pipeline)
 
-## step 2: [DONE]
-- [x] Lấy thông tin POI trong file 
-- [x] Dữ liệu lấy từ `detail_pois.geojson` trích xuất ra file ([pois_by_zone.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/pois_by_zone.csv))
-- [x] Tính khoảng cách từ zone ${i}$ đến các zone còn lại, lấy center tới center theo công thức Euclid
-- [x] Các zone $j$ thuộc $bin_k$ (tức là $bin_k$ chứa center của zone $j$)
-- [x] Lấy count(POI) của các zone còn lại là lực hấp thụ ($A_j$)
-- [x] Công thức tính phân bổ xuất phát từ zone ${i}$ đến các zone khác (Logic 2 bước)
+Tài liệu này hướng dẫn các bước thực hiện để kiểm chứng **Quy luật di chuyển phụ thuộc quy mô (Scale-Dependent Mobility Law)**.
 
-## step 3: [DONE] Version Attraction-Uniform (No POI)
-  $$ \hat{T}_{ij} = O_{i} \times \frac{P(\text{bin}_{k})}{N_k} $$
-  Trong đó:
-  - $\hat{T}_{ij}$: lượng người di chuyển dự đoán từ zone $i$ đến zone $j$
-  - $O_i$: Tổng số lượng di chuyển từ zone $i$
-  - $P(\text{bin}_{k})$: xác suất di chuyển vào khoảng cách bin chứa zone $j$ (từ histogram)
-  - $N_k$: Số lượng zone đích nằm trong khoảng cách $bin_k$ (chia đều lượng người)
-- [x] Ráp công thức tính lượng người di chuyển từ zone ${i}$ đến các zone khác
-- [x] Lưu lại kết quả ([step3_gravity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step3_gravity_results.csv))
+## Các mô hình toán học (Mathematical Models)
 
-## step 4: [DONE] Version Attraction-Weighted (POI)
-  $$ \hat{T}_{ij} = O_{i} \times P(\text{bin}_{k}) \times \frac{A_j}{\sum_{z \in \text{bin}_{k}} A_z} $$
-  Trong đó:
-  - $\hat{T}_{ij}$: lượng người di chuyển dự đoán từ zone $i$ đến zone $j$
-  - $O_i$: Tổng số lượng di chuyển từ zone $i$
-  - $A_j$: Số POI của zone $j$
-  - $P(\text{bin}_{k})$: xác suất di chuyển vào khoảng cách bin chứa zone $j$ (từ histogram)
-- [x] Ráp công thức hấp thụ và khuếch tán tính lượng người di chuyển từ zone ${i}$ đến các zone khác
-- [x] Lưu lại kết quả ([step4_gravity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step4_gravity_results.csv))
+> [!NOTE]
+> Tất cả các mô hình dưới đây chỉ áp dụng cho luồng di chuyển giữa các vùng khác nhau (**$j \neq i$**). Các luồng nội vùng ($i \to i$) được xử lý như dữ liệu thực tế đã biết (**ground truth**) và luôn mặc định là chính xác trong quá trình đánh giá.
 
-## step 5: [DONE]
-- [x] Kiểm tra kết quả dự đoán với dữ liệu thực tế bằng CPC, R^2, MAE, RMSE cho 2 version (Uniform vs Weighted)
-- So sánh kết quả xem có cải thiện version POI so với version no POI không
-- [x] Lưu kết quả ([step5_evaluation_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step5_evaluation_results.csv))
-
-## step 6: [DONE]
-- [x] Hiện thực mô hình radiation (Population-based)
-- [x] pop lấy từ file sgp_pop_2025_CN_1km_R2025A_UA_v1.tif
-### Công thức tổng quát:
-$$ T_{ij} = O_i \frac{m_i \times n_j}{(m_i + s_{ij}) \times (m_i + n_j + s_{ij})} $$
-
+### 1. Mô hình Shell (Production-Constrained)
+Đây là mô hình cốt lõi của nghiên cứu, kết hợp xác suất khoảng cách thực nghiệm $P(r)$ và trọng số hấp dẫn $B_j$:
+$$\hat{T}_{ij} = O_i \times P(\text{bin}_{k}|i) \times P(j|bin_k, i), \quad \text{với } j \neq i$$
 Trong đó:
-- **$T_{ij}$**: Số lượng chuyến đi trung bình dự báo từ địa điểm gốc $i$ đến địa điểm đích $j$.
-- **$O_i$**: Tổng số lượng di chuyển từ zone $i$ như trong step 3
-- **$m_i$**: Quy mô dân số tại gốc $i$.
-- **$n_j$**: Quy mô dân số tại đích $j$.
-- **$s_{ij}$**: Tổng dân số sinh sống trong vùng tròn tâm $i$ với bán kính $r_{ij}$ (không tính dân số tại $i$ và $j$).
+- **Attraction-Uniform**: $P(j|bin_k, i) = \frac{1}{\sum_{z \in \text{bin}_{k}, z \neq i} 1}$
+- **Attraction-Weighted**: $P(j|bin_k, i) = \frac{B_j+\epsilon}{\sum_{z \in \text{bin}_{k}, z \neq i} (B_z+\epsilon)}$
+- $O_i$: Tổng sản lượng thực tế tại vùng $i$ (chỉ tính các chuyến đi đi ra ngoài).
+- $P(\text{bin}_{k}|i)$: Xác suất di chuyển rơi vào dải khoảng cách ứng với bin $k$.
+- $B_j$: Khối lượng hấp dẫn (POI) tại vùng $j$.
+- $\epsilon = 1$: Hằng số làm mịn cho các vùng có 0 POI.
 
-- [x] Lưu kết quả ([step6_radiation_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step6_radiation_results.csv))
+### 2. Mô hình Radiation
+$$\hat{T}_{ij} = O_i \frac{m_i n_j}{(m_i + s_{ij})(m_i + n_j + s_{ij})}, \quad \text{với } j \neq i$$
+- $m_i$: Dân số (hoặc POI) tại vùng nguồn $i$.
+- $n_j$: Dân số (hoặc POI) tại vùng đích $j$.
+- $s_{ij}$: Tổng dân số (hoặc POI) trong vòng tròn tâm $i$, bán kính $r_{ij}$ (không tính $i$ và $j$).
 
-## step 7: [DONE]
-- [x] Hiện thực mô hình gravity distance decay function (Parametric)
-### Công thức tổng quát (Production-Constrained):
-$$ T_{ij} = A_i \times O_i \times D_j \times f(r_{ij}) $$
+### 3. Mô hình Gravity (Parametric Decay)
+$$\hat{T}_{ij} = O_i \frac{f(r_{ij}) B_j}{\sum_{k, k \neq i} f(r_{ik}) B_k}, \quad \text{với } j \neq i$$
+- **Power Law**: $f(r) = r^{-\gamma}$
+- **Exponential Law**: $f(r) = e^{-\beta r}$
 
-Trong đó:
-- **$T_{ij}$**: Số lượng cá nhân di chuyển từ địa điểm gốc $i$ đến địa điểm đích $j$ trên một đơn vị thời gian.
-- **$O_i$**: Tổng sản lượng (Production) di chuyển thực tế từ gốc $i$.
-- **$D_j$**: Sức hấp dẫn (Attractiveness) của điểm đích $j$: $D_j = n_j$ (dân số).
-- **$f(r_{ij})$**: Hàm cản trở khoảng cách (Power: $r_{ij}^{-\gamma}$ hoặc Exponential: $e^{-\gamma r_{ij}}$).
-- **$A_i$**: Hệ số cân bằng (Balancing Factor):
-$$ A_i = \frac{1}{\sum_{j} D_j \times f(r_{ij})} $$
-Hệ số này đảm bảo rằng $\sum_j T_{ij} = O_i$.
+---
 
-- [x] luu ket qua tham so uoc luong vao file [step7_gravity_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step7_gravity_results.csv)
+## Phase 1: Chuẩn bị dữ liệu & Trích xuất đặc trưng
 
-## step 8: [DONE]
-- [x] điều chỉnh mô hình radiation ở step 6 theo hướng $s_{ij}$ là tổng POI
-- [x] luu ket qua vao file [step8_radiation_results.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step8_radiation_results.csv)
+### Step 1: Phân tích Histogram & Chia khoảng cách (Binning) [DONE]
+- **Script**: `step1_histogram.py`
+- **Mô tả**: Chia khoảng cách di chuyển thành các bin 1km từ dữ liệu `data_trip_sum.csv`.
+- **Kết quả**: [binned_trips_by_zone.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/binned_trips_by_zone.csv)
 
-## step 9: [DONE]
-- [x] so sánh kết quả 6 mô hình bằng CPC, R^2, MAE, RMSE
-- [x] cap nhat vao REPORT.md
+### Step 2: Trích xuất đặc trưng hấp dẫn (POI) [DONE]
+- **Script**: `step2_poi_extraction.py`
+- **Mô tả**: Trích xuất số lượng POI từ `detail_pois.geojson` và tính toán ma trận khoảng cách giữa các zone.
+- **Kết quả**: [pois_by_zone.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/pois_by_zone.csv)
+
+---
+
+## Phase 2: Các mô hình Shell (Đề xuất)
+
+### Step 3: Mô hình Attraction-Uniform (Không POI) [DONE]
+- **Script**: `step3_model_no_poi.py`
+- **Công thức**: Xem mục 1.1 (Attraction-Uniform).
+- **Mô tả**: Dự báo luồng di chuyển liên vùng ($j \neq i$) bằng cách phân bổ đều sản lượng $O_i^{out}$ dựa trên $P(\text{bin}_{k})$. Luồng nội vùng được giữ làm ground truth.
+
+### Step 4: Mô hình Attraction-Weighted (Sử dụng POI) [DONE]
+- **Script**: `step4_model_poi.py`
+- **Công thức**: Xem mục 1.1 (Attraction-Weighted).
+- **Lưu ý**: Sử dụng hằng số làm mịn $\epsilon = 1$ cho các vùng không có POI. Luồng nội vùng được giữ làm ground truth.
+
+---
+
+## Phase 3: Mô hình đối chứng (Baselines)
+
+### Step 5: Mô hình Radiation (Dân số & POI) [DONE]
+- **Scripts**: `step6_radiation.py` (Population) và `step8_radiation_poi.py` (POI)
+- **Công thức**: Xem mục 2. Luồng nội vùng được giữ làm ground truth.
+
+### Step 6: Mô hình Gravity Distance-Decay (Tham số) [DONE]
+- **Script**: `step7_gravity_decay.py`
+- **Mô tả**: Hiện thực hàm Power-law và Exponential decay cho cả Dân số và POI.
+
+---
+
+## Phase 4: Đánh giá & Kiểm chứng
+
+### Step 7: So sánh hiệu suất tổng thể [DONE]
+- **Script**: `step9_full_comparison.py`
+- **Đầu ra**: Báo cáo tổng hợp hiệu suất (CPC, R², MAE, RMSE) tại [REPORT.md](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/REPORT.md).
+
+### Step 8: Thử nghiệm hiệu quả dữ liệu (Partial-Training Shell) [DONE]
+- **Script**: `step8_partial_training.py`
+- **Mô tả**: Gom các zone thành n = [tổng zone /2, tổng zone /3, tổng zone /4, tổng zone /5, tổng zone /6, tổng zone /7, tổng zone /8, tổng zone /9, tổng zone /10] nhóm địa lý.
+- **Cơ chế chọn mẫu**:
+  - Phân cụm không gian (Spatial Clustering) sử dụng **K-Means** dựa trên tọa độ $(X, Y)$ của các vùng để chia thành $N$ nhóm ($N = Z/2 \dots Z/10$).
+  - **Lặp 20 lần**: Trong mỗi lần lặp, chọn **ngẫu nhiên 1 vùng đại diện** duy nhất trong mỗi cụm để lấy phân phối xác suất ($P_{bin}$) huấn luyện.
+  - Các vùng còn lại trong cụm sẽ "mượn" (map) phân phối xác suất của vùng đại diện đó để thực hiện dự báo.
+- **Kết quả**: Biểu đồ ổn định CPC [step8_cpc_growth_curve.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step8_cpc_growth_curve.png).

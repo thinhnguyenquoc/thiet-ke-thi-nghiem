@@ -9,7 +9,7 @@ BASE_DIR = os.getcwd()
 DATA_DIR_ROOT = os.path.join(BASE_DIR, "cityDataset_real")
 OUTPUT_DIR_ROOT = os.path.join(BASE_DIR, "cities")
 
-# Template for execute_steps.py
+# Template for execute_steps.py (Updated for j != i and Ground Truth diagonals)
 EXECUTE_STEPS_TEMPLATE = """import pandas as pd
 import numpy as np
 import os
@@ -27,24 +27,21 @@ OUT_STEP1 = "binned_trips_by_zone.csv"
 OUT_STEP3 = "step3_gravity_results.csv"
 OUT_STEP4 = "step4_gravity_results.csv"
 OUT_STEP6 = "step6_radiation_results.csv"
-OUT_STEP7 = "step7_gravity_results.csv"
+OUT_STEP7_PWR_POP = "step7_pwr_pop.csv"
+OUT_STEP7_PWR_POI = "step7_pwr_poi.csv"
+OUT_STEP7_EXP_POP = "step7_exp_pop.csv"
+OUT_STEP7_EXP_POI = "step7_exp_poi.csv"
 OUT_STEP8 = "step8_radiation_results.csv"
-OUT_STEP7_EXP = "step7b_gravity_exp_results.csv"
 
 def calculate_metrics(y_true, y_pred):
     intersection = np.sum(np.minimum(y_true, y_pred))
     total = np.sum(y_true) + np.sum(y_pred)
     cpc = 2 * intersection / total if total > 0 else 0
-    mae = np.mean(np.abs(y_true - y_pred))
-    rmse = np.sqrt(np.mean((y_true - y_pred)**2))
-    ss_res = np.sum((y_true - y_pred)**2)
-    ss_tot = np.sum((y_true - np.mean(y_true))**2)
-    r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
-    return cpc, r2, mae, rmse
+    return cpc
 
 def main():
     if not all(os.path.exists(f) for f in [TRIPS_FILE, DIST_FILE, POI_FILE, CENSUS_FILE]):
-        print("❌ Missing essential data files. Skipping.")
+        print("❌ Missing data files. Skipping.")
         return
 
     # Load data
@@ -53,127 +50,157 @@ def main():
     poi_df = pd.read_csv(POI_FILE)[['idx', 'total_pois']]
     census_df = pd.read_csv(CENSUS_FILE)[['idx', 'total_population']]
 
-    # Rename columns for consistency
+    # Rename
     od_df.rename(columns={{'o_idx': 'origin', 'd_idx': 'destination', 'trip_count': 'count'}}, inplace=True)
     dist_df.rename(columns={{'o_idx': 'origin', 'd_idx': 'destination', 'distance_km': 'distance'}}, inplace=True)
     poi_df.rename(columns={{'idx': 'zone', 'total_pois': 'poi'}}, inplace=True)
     census_df.rename(columns={{'idx': 'zone', 'total_population': 'pop'}}, inplace=True)
 
-    # 1. Histograms
-    merged = pd.merge(od_df, dist_df, on=['origin', 'destination'])
-    merged['distance_bin'] = np.floor(merged['distance']).astype(float)
-    binned = merged.groupby(['origin', 'distance_bin'])['count'].sum().reset_index()
-    binned.to_csv(OUT_STEP1, index=False)
-
-    # 3. Uniform Shell
-    oi_df = od_df.groupby('origin')['count'].sum().reset_index(name='o_i')
-    origin_totals = binned.groupby('origin')['count'].transform('sum')
-    binned['p_bin'] = binned['count'] / origin_totals
-    full_pairs = dist_df.copy()
-    full_pairs['distance_bin'] = np.floor(full_pairs['distance']).astype(float)
-    nk_df = full_pairs.groupby(['origin', 'distance_bin']).size().reset_index(name='n_k')
-    step3_df = pd.merge(full_pairs, oi_df, on='origin')
-    step3_df = pd.merge(step3_df, binned[['origin', 'distance_bin', 'p_bin']], on=['origin', 'distance_bin'], how='left')
-    step3_df['p_bin'] = step3_df['p_bin'].fillna(0)
-    step3_df = pd.merge(step3_df, nk_df, on=['origin', 'distance_bin'])
-    step3_df['pred_count'] = step3_df['o_i'] * step3_df['p_bin'] / step3_df['n_k']
-    final_step3 = pd.merge(step3_df, od_df, on=['origin', 'destination'], how='left').fillna(0)
-    final_step3[['origin', 'destination', 'count', 'pred_count']].to_csv(OUT_STEP3, index=False)
-
-    # 4. POI-Weighted Shell
-    step4_df = pd.merge(step3_df.drop(columns=['pred_count', 'n_k']), poi_df.rename(columns={{'zone': 'destination'}}), on='destination')
-    sum_aj_df = step4_df.groupby(['origin', 'distance_bin'])['poi'].sum().reset_index(name='sum_aj')
-    step4_df = pd.merge(step4_df, sum_aj_df, on=['origin', 'distance_bin'])
-    step4_df['pred_count'] = np.where(step4_df['sum_aj'] > 0, 
-                                     step4_df['o_i'] * step4_df['p_bin'] * (step4_df['poi'] / step4_df['sum_aj']),
-                                     0)
-    final_step4 = pd.merge(step4_df, od_df, on=['origin', 'destination'], how='left').fillna(0)
-    final_step4[['origin', 'destination', 'count', 'pred_count']].to_csv(OUT_STEP4, index=False)
-
-    # 6. Radiation (Pop)
-    rad_df = pd.merge(dist_df, oi_df, on='origin')
-    rad_df = pd.merge(rad_df, census_df.rename(columns={{'zone': 'origin', 'pop': 'm_i'}}), on='origin')
-    rad_df = pd.merge(rad_df, census_df.rename(columns={{'zone': 'destination', 'pop': 'n_j'}}), on='destination')
-    all_s_ij = []
-    for origin, group in rad_df.groupby('origin'):
-        group = group.sort_values('distance')
-        group['cum_pop'] = group['n_j'].cumsum()
-        group['s_ij'] = group['cum_pop'].shift(1).fillna(0)
-        all_s_ij.append(group)
-    rad_df = pd.concat(all_s_ij)
-    rad_df['pred_count'] = rad_df['o_i'] * (rad_df['m_i'] * rad_df['n_j']) / \\
-                           ((rad_df['m_i'] + rad_df['s_ij'] + 1e-6) * (rad_df['m_i'] + rad_df['n_j'] + rad_df['s_ij'] + 1e-6))
-    final_rad = pd.merge(rad_df, od_df, on=['origin', 'destination'], how='left').fillna(0)
-    final_rad[['origin', 'destination', 'count', 'pred_count']].to_csv(OUT_STEP6, index=False)
-
-    # 7. Production-Constrained Gravity
+    # 0. Matrix Setup (j != i and Internal Flows as Ground Truth)
     all_zones = sorted(census_df['zone'].unique())
-    pop_vec = census_df.set_index('zone').loc[all_zones, 'pop'].values
-    actual_mat = np.zeros((len(all_zones), len(all_zones)))
+    z_count = len(all_zones)
     zone_to_idx = {{z: i for i, z in enumerate(all_zones)}}
+    
+    actual_mat = np.zeros((z_count, z_count))
     for _, row in od_df.iterrows():
         if row['origin'] in zone_to_idx and row['destination'] in zone_to_idx:
             actual_mat[zone_to_idx[row['origin']], zone_to_idx[row['destination']]] = row['count']
-    dist_mat = np.zeros((len(all_zones), len(all_zones)))
+    
+    internal_flows = np.diag(actual_mat)
+    external_oi = actual_mat.sum(axis=1) - internal_flows
+    
+    dist_mat = np.zeros((z_count, z_count))
     for _, row in dist_df.iterrows():
         if row['origin'] in zone_to_idx and row['destination'] in zone_to_idx:
             dist_mat[zone_to_idx[row['origin']], zone_to_idx[row['destination']]] = row['distance']
     dist_mat = np.where(dist_mat < 0.01, 0.01, dist_mat)
 
-    def solve_gravity(gamma, type='power'):
-        decay = (pop_vec / (dist_mat ** gamma)) if type == 'power' else (pop_vec * np.exp(-gamma * dist_mat))
-        row_sums = decay.sum(axis=1, keepdims=True); row_sums[row_sums == 0] = 1.0
-        prob_mat = decay / row_sums
-        return prob_mat * actual_mat.sum(axis=1, keepdims=True)
+    # 1. P(bin|i) - Binned Probability Distribution (Inter-zone only)
+    ext_trips = od_df[od_df['origin'] != od_df['destination']].copy()
+    ext_trips = pd.merge(ext_trips, dist_df, on=['origin', 'destination'])
+    ext_trips['bin'] = np.floor(ext_trips['distance']).astype(int)
+    
+    binned_counts = ext_trips.groupby(['origin', 'bin'])['count'].sum().reset_index()
+    origin_ext_sum = binned_counts.groupby('origin')['count'].transform('sum')
+    binned_counts['p_bin'] = binned_counts['count'] / (origin_ext_sum + 1e-9)
+    binned_counts.to_csv(OUT_STEP1, index=False)
+    
+    p_bin_dict = {{}}
+    for _, row in binned_counts.iterrows():
+        if row['origin'] not in p_bin_dict: p_bin_dict[row['origin']] = {{}}
+        p_bin_dict[row['origin']][row['bin']] = row['p_bin']
 
-    def objective(gamma, type='power'):
-        pred = solve_gravity(gamma[0], type)
-        it = np.sum(np.minimum(actual_mat, pred)); tot = np.sum(actual_mat) + np.sum(pred)
-        return 1.0 - (2 * it / tot if tot > 0 else 0)
+    # 3 & 4. Shell Models
+    def predict_shell(mode='uniform'):
+        pred = np.zeros((z_count, z_count))
+        poi_dict = poi_df.set_index('zone')['poi'].to_dict()
+        epsilon = 1.0
+        
+        for i_idx, origin in enumerate(all_zones):
+            o_out = external_oi[i_idx]
+            if o_out == 0: continue
+            
+            # Destination info for this origin
+            dists = dist_mat[i_idx]
+            bins = np.floor(dists).astype(int)
+            p_dict = p_bin_dict.get(origin, {{}})
+            
+            for b, prob in p_dict.items():
+                if prob == 0: continue
+                # dests in this bin (j != i)
+                in_bin = (bins == b) & (np.arange(z_count) != i_idx)
+                if not np.any(in_bin): continue
+                
+                if mode == 'uniform':
+                    weights = in_bin.astype(float)
+                else:
+                    weights = np.array([poi_dict.get(all_zones[j], 0) + epsilon if in_bin[j] else 0 for j in range(z_count)])
+                
+                ws = weights.sum()
+                if ws > 0:
+                    pred[i_idx] += (weights / ws) * (o_out * prob)
+        
+        return pred + np.diag(internal_flows)
 
-    res_p = minimize(objective, x0=[1.5], args=('power',), bounds=[(0, 5)])
-    pred_p = solve_gravity(res_p.x[0], 'power')
-    res_e = minimize(objective, x0=[0.1], args=('exponential',), bounds=[(0, 5)])
-    pred_e = solve_gravity(res_e.x[0], 'exponential')
-
-    def mat_to_df(mat):
+    m_uniform = predict_shell('uniform')
+    m_weighted = predict_shell('weighted')
+    
+    def save_mat(m, f):
         rows = []
         for i, o in enumerate(all_zones):
             for j, d in enumerate(all_zones):
-                rows.append({{'origin': o, 'destination': d, 'pred_count': mat[i, j]}})
-        return pd.merge(pd.DataFrame(rows), od_df, on=['origin', 'destination'], how='left').fillna(0)
+                if m[i,j] > 0: rows.append({{'origin': o, 'destination': d, 'pred_count': m[i,j]}})
+        pd.DataFrame(rows).to_csv(f, index=False)
 
-    mat_to_df(pred_p)[['origin', 'destination', 'count', 'pred_count']].to_csv(OUT_STEP7, index=False)
-    mat_to_df(pred_e)[['origin', 'destination', 'count', 'pred_count']].to_csv(OUT_STEP7_EXP, index=False)
+    save_mat(m_uniform, OUT_STEP3)
+    save_mat(m_weighted, OUT_STEP4)
 
-    # 8. Radiation (POI)
-    rad_poi_df = pd.merge(dist_df, oi_df, on='origin')
-    rad_poi_df = pd.merge(rad_poi_df, poi_df.rename(columns={{'zone': 'origin', 'poi': 'm_i'}}), on='origin')
-    rad_poi_df = pd.merge(rad_poi_df, poi_df.rename(columns={{'zone': 'destination', 'poi': 'n_j'}}), on='destination')
-    all_s_ij_poi = []
-    for origin, group in rad_poi_df.groupby('origin'):
-        group = group.sort_values('distance')
-        group['cum_poi'] = group['n_j'].cumsum()
-        group['s_ij'] = group['cum_poi'].shift(1).fillna(0)
-        all_s_ij_poi.append(group)
-    rad_poi_df = pd.concat(all_s_ij_poi)
-    rad_poi_df['pred_count'] = rad_poi_df['o_i'] * (rad_poi_df['m_i'] * rad_poi_df['n_j']) / \\
-                               ((rad_poi_df['m_i'] + rad_poi_df['s_ij'] + 1e-6) * (rad_poi_df['m_i'] + rad_poi_df['n_j'] + rad_poi_df['s_ij'] + 1e-6))
-    pd.merge(rad_poi_df, od_df, on=['origin', 'destination'], how='left').fillna(0)[['origin', 'destination', 'count', 'pred_count']].to_csv(OUT_STEP8, index=False)
+    # 6 & 8. Radiation
+    def run_rad(mass_vec):
+        pred = np.zeros((z_count, z_count))
+        for i in range(z_count):
+            o_out = external_oi[i]
+            if o_out == 0: continue
+            m_i = mass_vec[i]
+            dists = dist_mat[i]
+            mass_j = mass_vec.copy()
+            # Sort by distance
+            order = np.argsort(dists)
+            sorted_mass = mass_j[order]
+            s_ij = np.cumsum(sorted_mass) - sorted_mass # s_ij does not include j
+            # But standard radiation s_ij is mass in circle *excluding* i and j
+            # So s_ij_actual = cumsum(mass) - mass_i - mass_j
+            # For simplicity using the cumul search:
+            sorted_s = np.array([mass_j[dists < dists[idx]].sum() - m_i for idx in range(z_count)])
+            sorted_s = np.where(sorted_s < 0, 0, sorted_s)
+            
+            p_ij_num = m_i * mass_j
+            p_ij_den = (m_i + sorted_s) * (m_i + mass_j + sorted_s)
+            p_ij = np.where(p_ij_den > 0, p_ij_num / p_ij_den, 0)
+            p_ij[i] = 0 # j != i
+            
+            if p_ij.sum() > 0:
+                pred[i] = (p_ij / p_ij.sum()) * o_out
+                
+        return pred + np.diag(internal_flows)
 
-    # Final Summary
-    model_files = {{'Attraction-Uniform': OUT_STEP3, 'Attraction-Weighted': OUT_STEP4, 'Radiation-Pop': OUT_STEP6, 'Radiation-POI': OUT_STEP8, 'Power-Decay': OUT_STEP7, 'Exponential-Decay': OUT_STEP7_EXP}}
-    summary_rows = []
-    for name, f in model_files.items():
-        if os.path.exists(f):
-            m_df = pd.read_csv(f)
-            _, r2, mae, rmse = calculate_metrics(m_df['count'], m_df['pred_count'])
-            cpcs = []
-            for origin, group in m_df.groupby('origin'):
-                t, p = group['count'].values, group['pred_count'].values
-                if (t.sum() + p.sum()) > 0: cpcs.append(2 * np.sum(np.minimum(t, p)) / (t.sum() + p.sum()))
-            summary_rows.append({{'Model': name, 'CPC': np.mean(cpcs) if cpcs else 0, 'R2': r2, 'MAE': mae, 'RMSE': rmse}})
-    pd.DataFrame(summary_rows).to_csv('final_summary_report.csv', index=False)
+    pop_vec = census_df.set_index('zone').loc[all_zones, 'pop'].values + 1.0
+    poi_vec = poi_df.set_index('zone').loc[all_zones, 'poi'].values + 1.0
+    
+    save_mat(run_rad(pop_vec), OUT_STEP6)
+    save_mat(run_rad(poi_vec), OUT_STEP8)
+
+    # 7. Gravity
+    def solve_grav(gamma, attr, ftype):
+        decay = (1.0 / (dist_mat ** gamma)) if ftype == 'power' else np.exp(-gamma * dist_mat)
+        weight_mat = decay * attr[np.newaxis, :]
+        np.fill_diagonal(weight_mat, 0)
+        row_sums = weight_mat.sum(axis=1, keepdims=True); row_sums[row_sums == 0] = 1.0
+        prob_mat = weight_mat / row_sums
+        return (prob_mat * external_oi[:, np.newaxis]) + np.diag(internal_flows)
+
+    def obj(gamma, attr, ftype):
+        p = solve_grav(gamma[0], attr, ftype)
+        it = np.sum(np.minimum(actual_mat, p)); tot = np.sum(actual_mat) + np.sum(p)
+        return 1.0 - (2 * it / tot if tot > 0 else 0)
+
+    model_summaries = []
+    scenarios = [('Power-Pop', pop_vec, 'power'), ('Power-POI', poi_vec, 'power'),
+                 ('Exp-Pop', pop_vec, 'exp'), ('Exp-POI', poi_vec, 'exp')]
+    
+    for name, attr, ftype in scenarios:
+        res = minimize(obj, x0=[1.0], args=(attr, ftype), bounds=[(0.01, 5)])
+        p_mat = solve_grav(res.x[0], attr, ftype)
+        model_summaries.append({{'Model': name, 'CPC': 1.0 - res.fun, 'Params': res.x[0]}})
+
+    # Eval others
+    others = [('Uniform', m_uniform), ('Weighted', m_weighted), 
+              ('Rad-Pop', run_rad(pop_vec)), ('Rad-POI', run_rad(poi_vec))]
+    for name, mat in others:
+        it = np.sum(np.minimum(actual_mat, mat)); tot = np.sum(actual_mat) + np.sum(mat)
+        model_summaries.append({{'Model': name, 'CPC': 2*it/tot if tot > 0 else 0, 'Params': 0}})
+    
+    pd.DataFrame(model_summaries).to_csv('final_summary_report.csv', index=False)
 
 if __name__ == "__main__":
     main()
@@ -198,7 +225,9 @@ def main():
         
         # Run it
         try:
-            subprocess.run(["python3", "execute_steps.py"], cwd=city_out_dir, capture_output=True, text=True)
+            result = subprocess.run(["python3", "execute_steps.py"], cwd=city_out_dir, capture_output=True, text=True)
+            if result.returncode != 0:
+                print(f"❌ Error in {city}: {result.stderr}")
             
             # Read back summary
             summary_path = os.path.join(city_out_dir, "final_summary_report.csv")
@@ -211,10 +240,12 @@ def main():
             else:
                 print(f"⚠️ {city} failed to produce summary.")
         except Exception as e:
-            print(f"❌ Error processing {city}: {e}")
+            print(f"❌ Exception processing {city}: {e}")
 
     if overall_summary:
         final_all_df = pd.concat(overall_summary)
+        # Reorder columns: City, Model, CPC, Params
+        final_all_df = final_all_df[['City', 'Model', 'CPC', 'Params']]
         final_all_df.to_csv("FINAL_ALL_CITIES_REPORT.csv", index=False)
         print("\n🏆 ALL CITIES PROCESSED. Master report saved as FINAL_ALL_CITIES_REPORT.csv")
 
