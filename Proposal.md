@@ -321,10 +321,24 @@ Nghiên cứu đã thực hiện phân tích đối chiếu trên 52 đô thị 
 - **USA Cities**: Đặc biệt tại các thành phố Hoa Kỳ, CPC duy trì ổn định ở mức cao (~0.79) ngay cả ở tỷ lệ mẫu thấp, chứng minh tính khả thi của mô hình tại các vùng thiếu hụt dữ liệu khảo sát diện rộng.
 
 # 7. Discussion
-Phân tích kết quả thực nghiệm trên 52 thành phố mang lại những kết luận quan trọng:
-- **Sự xác nhận của Quy luật di chuyển phụ thuộc quy mô**: Việc các mô hình dựa trên Shell chiếm ưu thế tuyệt đối (với CPC trung bình lên tới 0.79) minh chứng rằng cấu trúc di chuyển đô thị hiện đại bị chi phối bởi các quy luật phân dải khoảng cách hơn là các hàm suy giảm liên tục đơn giản.
-- **Tính bão hòa thông tin và sự ổn định**: Thử nghiệm Partial-Training (Hình 5) xác nhận quy luật di chuyển có thể được khôi phục chính xác chỉ với **10% dữ liệu mẫu**. Điều này cho thấy quy luật di chuyển dải có tính bao quát cao trong không gian, cho phép khôi phục ma trận OD toàn thành phố từ các quan sát hạn chế.
-- **Tính khả thi của dữ liệu mở**: Việc sử dụng dữ liệu POI từ OSM thay cho dữ liệu dân số truyền thống giúp tăng độ chính xác của mô hình lên đáng kể (weighted vs uniform), đặc biệt là tại các đô thị nén như Singapore và Seoul.
+Phân tích kết quả thực nghiệm trên 52 thành phố mang lại những kết luận quan trọng về các quy luật di chuyển đô thị hiện đại:
+
+## 7.1 Thiên kiến cấu trúc đô thị: POI như một đại diện di động (Proxy)
+Một trong những phát hiện quan trọng nhất là sự khác biệt về hiệu quả của trọng số POI giữa các cấu trúc đô thị khác nhau.
+
+<img src="poi_regional_bias.png" width="70%" id="fig6">
+*Hình 6: Sự tương phản về hiệu quả của POI giữa các đô thị Hoa Kỳ (dàn trải) và Đông Á (nén).*
+
+**Nhận xét và thảo luận**:
+- **Đô thị nén (Singapore, Seoul)**: Tại các thành phố này, dữ liệu POI đóng vai trò là "lực hấp dẫn" cực kỳ hiệu quả. Do đặc thù quy hoạch đa chức năng (mixed-use) và mật độ tiện ích dày đặc, hành vi di chuyển của người dân thường gắn liền với việc tiêu dùng dịch vụ và tiện ích công cộng. Vì vậy, mật độ POI càng cao, khả năng dự báo của mô hình **Weighted** càng tăng (tương quan dương).
+- **Đô thị dàn trải (USA Cities)**: Ngược lại, tại các thành phố Hoa Kỳ, việc sử dụng POI làm trọng số phân bộ di chuyển thường gây ra "nhiễu" dữ liệu (tương quan âm). Điều này có thể giải thích bởi cấu trúc quy hoạch phân vùng (zoning) nghiêm ngặt, nơi các khu vực làm việc (employment centers) thường tách biệt hoàn toàn với các khu vực tiện ích thương mại (POIs). Trong bối cảnh này, việc phân bổ dòng chảy di chuyển dựa trên POI (ví dụ: nhà hàng, cửa hàng) sẽ làm sai lệch các luồng di chuyển chủ đạo là từ nhà đến nơi làm việc.
+- **Tính ổn định của Quy luật Shell**: Phát hiện này khẳng định rằng quy luật Shell (dựa trên khoảng cách rời rạc) là khung xương vững chắc cho mọi đô thị, trong khi việc tích hợp thêm các biến số như POI cần được cân nhắc dựa trên đặc thù quy hoạch của từng khu vực.
+
+## 7.2 Tính bão hòa thông tin và sự ổn định
+Thử nghiệm Partial-Training (Hình 5) xác nhận quy luật di chuyển có thể được khôi phục chính xác chỉ với **10% dữ liệu mẫu**. Điều này cho thấy quy luật di chuyển dải có tính bao quát cao trong không gian, cho phép khôi phục ma trận OD toàn thành phố từ các quan sát hạn chế.
+
+## 7.3 Tính khả thi của dữ liệu mở
+Việc sử dụng dữ liệu POI từ OSM thay cho dữ liệu dân số truyền thống giúp tăng độ chính xác của mô hình lên đáng kể (weighted vs uniform), đặc biệt là tại các đô thị nén như Singapore và Seoul.
 
 # 8. Conclusion
 Nghiên cứu đã thành công trong việc xây dựng và kiểm chứng khung mô hình di động không tham số dựa trên quy luật Shell. Mô hình mở ra hướng đi mới cho việc dự báo di động tại các đô thị toàn cầu với yêu cầu dữ liệu tối thiểu.
