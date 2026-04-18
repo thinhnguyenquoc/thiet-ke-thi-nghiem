@@ -331,7 +331,10 @@ Một trong những phát hiện quan trọng nhất là sự khác biệt về 
 
 **Nhận xét và thảo luận**:
 - **Đô thị nén (Singapore, Seoul)**: Tại các thành phố này, dữ liệu POI đóng vai trò là "lực hấp dẫn" cực kỳ hiệu quả. Do đặc thù quy hoạch đa chức năng (mixed-use) và mật độ tiện ích dày đặc, hành vi di chuyển của người dân thường gắn liền với việc tiêu dùng dịch vụ và tiện ích công cộng. Vì vậy, mật độ POI càng cao, khả năng dự báo của mô hình **Weighted** càng tăng (tương quan dương).
-- **Đô thị dàn trải (USA Cities)**: Ngược lại, tại các thành phố Hoa Kỳ, việc sử dụng POI làm trọng số phân bộ di chuyển thường gây ra "nhiễu" dữ liệu (tương quan âm). Điều này có thể giải thích bởi cấu trúc quy hoạch phân vùng (zoning) nghiêm ngặt, nơi các khu vực làm việc (employment centers) thường tách biệt hoàn toàn với các khu vực tiện ích thương mại (POIs). Trong bối cảnh này, việc phân bổ dòng chảy di chuyển dựa trên POI (ví dụ: nhà hàng, cửa hàng) sẽ làm sai lệch các luồng di chuyển chủ đạo là từ nhà đến nơi làm việc.
+- **Đô thị dàn trải (USA Cities)**: Thống kê trên 50 thành phố Hoa Kỳ cho thấy một sự phân hóa rõ rệt về hiệu quả của POI:
+    * **20/50 thành phố (40%)**: Ghi nhận mức tăng trưởng dương (**Positive Gain**). Đây thường là các đô thị có trung tâm hành chính-thương mại tập trung mạnh (như Washington DC, Chicago).
+    * **30/50 thành phố (60%)**: Ghi nhận mức tăng trưởng âm (**Negative Gain**). Tại các đô thị này, việc sử dụng POI làm trọng số gây ra "nhiễu" dữ liệu, khiến mô hình Uniform chính xác hơn. 
+
 - **Tính ổn định của Quy luật Shell**: Phát hiện này khẳng định rằng quy luật Shell (dựa trên khoảng cách rời rạc) là khung xương vững chắc cho mọi đô thị, trong khi việc tích hợp thêm các biến số như POI cần được cân nhắc dựa trên đặc thù quy hoạch của từng khu vực.
 
 ## 7.2 Tính bão hòa thông tin và sự ổn định
@@ -358,3 +361,5 @@ Nghiên cứu đã thành công trong việc xây dựng và kiểm chứng khun
 12. F. Simini, M. C. González, A. Maritan, and A.-L. Barabási, "A universal model for mobility and migration patterns," Nature, vol. 484, no. 7392, pp. 96–100, 2012
 13. X. Liang, J. Zhao, L. Dong, and K. Xu, "Unraveling the origin of exponential law in intra-urban human mobility," Sci. Rep., vol. 3, p. 2983, 2013
 14. A. Noulas, S. Scellato, R. Lambiotte, M. Pontil, and C. Mascolo, "A tale of many cities: Universal patterns in human urban mobility," PLoS ONE, vol. 7, p. e37027, 2012
+15. A. Shertzer, T. Twinam, and R. P. Walsh, "Zoning and the Economic Geography of Cities," Journal of Urban Economics, vol. 91, pp. 54-71, 2016
+16. R. Ewing and R. Cervero, "Travel and the Built Environment: A Meta-Analysis," Journal of the American Planning Association, vol. 76, no. 3, pp. 265-294, 2010
