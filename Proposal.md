@@ -1,7 +1,7 @@
 # 1. Title (Tiêu đề)
 Sử dụng mô hình dựa trên phân bổ xác suất di chuyển để ước lượng luồng di chuyển tại các thành phố lớn: Singapore, Seoul
 # 2. Abstract
-Dữ liệu luồng di chuyển đô thị đóng vai trò then chốt trong quy hoạch giao thông và dự báo dịch bệnh. Tuy nhiên, các mô hình truyền thống thường gặp hạn chế trong việc cân bằng giữa tính linh hoạt và độ chính xác trên các cấu trúc đô thị đa dạng. Nghiên cứu đề xuất phương pháp **Scale-Dependent Mobility Law (Shell Model)** dựa trên phân bổ xác suất di chuyển rời rạc kết hợp với trọng số hấp dẫn từ dữ liệu mở OpenStreetMap. Thực nghiệm trên 52 thành phố (Seoul, Singapore và 50 đô thị Hoa Kỳ) cho thấy mô hình đề xuất đạt độ chính xác vượt trội với chỉ số CPC trung bình từ **0.70 đến 0.84**, cao hơn hẳn các mô hình tham số. Đặc biệt, nghiên cứu khẳng định tính ổn định không gian thông qua thử nghiệm với dữ liệu mẫu phân bố trong 10 nhóm không gian bao phủ thành phố, mô hình đạt độ bão hòa thông tin chỉ với **1% dữ liệu mẫu**, cho thấy quy luật di chuyển có thể được phục hồi chính xác từ các quan sát tối thiểu nếu đảm bảo tính bao phủ không gian. Kết quả này thiết lập một khung dự báo phi tham số, có khả năng chuyển giao cao cho các đô thị thiếu hụt dữ liệu khảo sát.
+Dữ liệu luồng di chuyển đô thị đóng vai trò then chốt trong quy hoạch giao thông và dự báo dịch bệnh. Tuy nhiên, các mô hình truyền thống thường gặp hạn chế trong việc cân bằng giữa tính linh hoạt và độ chính xác trên các cấu trúc đô thị đa dạng. Nghiên cứu đề xuất phương pháp **Scale-Dependent Mobility Law (Shell Model)** dựa trên phân bổ xác suất di chuyển rời rạc kết hợp với trọng số hấp dẫn từ dữ liệu mở OpenStreetMap. Thực nghiệm trên 52 thành phố (Seoul, Singapore và 50 đô thị Hoa Kỳ) cho thấy mô hình đề xuất đạt độ chính xác vượt trội với chỉ số CPC trung bình từ **0.70 đến 0.84**, cao hơn hẳn các mô hình tham số. Kết quả này thiết lập một khung dự báo phi tham số, có khả năng chuyển giao cao cho các đô thị thiếu hụt dữ liệu khảo sát.
 # 3. Introduction
 Các mô hình tương tác không gian truyền thống như Gravity và Radiation từ lâu đã được áp dụng rộng rãi để ước lượng luồng di chuyển (mobility flows) và mang lại nhiều kết quả quan trọng trong quản lý đô thị, dự báo dịch bệnh. Tuy nhiên, khả năng dự báo của các mô hình này vẫn có những giới hạn chưa thể sử dụng hiệu quả cho mọi loại hình đô thị.
 
@@ -112,7 +112,6 @@ Dự báo luồng di chuyển tại Alabama: $ \hat{T}_{AL} = 9,790 \times 0.000
 - Điều này cho thấy mô hình radiation có thể phản ánh được quy mô dân số và cơ hội xen giữa của các vùng - ảnh hưởng của không gian lân cận, tránh được việc bị phụ thuộc quá mức vào chỉ số khoảng cách. Nhờ đó cho kết quả tốt hơn mô hình gravity trong trường hợp này.
 
 ## 4.4 Probability Distribution of Trip Lengths
-Thay vì giả định một hàm suy giảm khoảng cách liên tục (như hàm Power hay Exponential), nghiên cứu này sử dụng phân bổ xác suất thực nghiệm rời rạc. 
 
 Với mỗi vùng $i$, ta xác định khoảng cách với các vùng $j$ còn lại. Sau đó, các vùng $j$ được gom vào các dải khoảng cách $bin_k$ dựa trên khoảng cách từ vùng $i$ đến vùng $j$. Độ rộng mỗi $bin_k$ được chọn là 1km để số lượng bin không quá lớn tránh tình trạng có quá nhiều bin không có dữ liệu làm sai lệch thống kê. 
 
@@ -269,119 +268,10 @@ Với $$P(j|bin_k, i) = \frac{B_j+\epsilon}{\sum_{z \in \text{bin}_{k}} (B_z+\ep
 # 6. Results
 Nghiên cứu đã thực hiện một phân tích toàn diện trên 52 quy mô đô thị khác nhau, bao gồm các siêu đô thị nén tại Châu Á (Singapore, Seoul) và 50 thành phố Hoa Kỳ với cấu trúc dàn trải. Kết quả khẳng định sự thống trị của các mô hình dựa trên cấu trúc vỏ (Shell Models) trong việc phục hồi luồng di chuyển.
 
-## 6.1 Tổng hợp hiệu suất toàn cầu (Global Performance Synthesis)
-Bảng dưới đây tổng hợp chỉ số **Origin-Averaged CPC** trung bình trên toàn bộ các thành phố nghiên cứu, thiết lập một thứ bậc hiệu suất mới cho các dòng mô hình di chuyển:
-
-| Model Framework | Global Avg CPC | Phân loại | Logic cốt lõi |
-| :--- | :--- | :--- | :--- |
-| **Attraction-Uniform (Shell)** | **0.7408** | Cấu trúc (Structural) | Dải khoảng cách 1km |
-| **Attraction-Weighted (POI)** | **0.7100** | Tối ưu (Optimization) | Vỏ + Hấp dẫn POI |
-| **Exponential Decay (PC)** | 0.6402 | Tham số (Parametric) | Ràng buộc sản lượng (PC) |
-| **Power Decay (PC)** | 0.6163 | Tham số (Parametric) | Ràng buộc sản lượng (PC) |
-| **Radiation (Pop)** | 0.4421 | Cơ hội xen giữa | Cơ hội (Dân số) |
-| **Radiation (POI)** | 0.4117 | Cơ hội xen giữa | Cơ hội (POI) |
-
-> [!IMPORTANT]
-> Sự cải thiện CPC của mô hình Gravity tham số (từ ~0.30 lên >0.60) chứng minh tầm quan trọng của việc áp dụng **Production-Constrained**. Tuy nhiên, mô hình Shell vẫn là tiêu chuẩn vàng với độ chính xác và tính ổn định vượt trội.
-
-
-
-## 6.2 Kết quả hiệu suất mô hình
-Dưới đây là bảng so sánh chi tiết hiệu suất của 6 mô hình tại hai thành phố nghiên cứu dựa trên các chỉ số CPC (Common Part of Commuters), $R^2$, MAE (Mean Absolute Error) và RMSE (Root Mean Square Error).
-
-### 6.2.1 Kết quả thực nghiệm tại Singapore (SGP)
-| Phiên bản mô hình | Lực hút ($D_j$) | **CPC** | **$R^2$** | **MAE** (Trips) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Radiation** | Population | 0.4042 | -1.78 | 473.55 |
-| **Radiation** | **POI ($B_j$)** | 0.4087 | -1.16 | 458.12 |
-| **Power Decay** | Population | 0.4846 | 0.29 | 365.12 |
-| **Power Decay** | **POI ($B_j$)** | **0.5146** | 0.51 | 312.45 |
-| **Exponential Decay** | Population | 0.5360 | 0.60 | 298.34 |
-| **Exponential Decay** | **POI ($B_j$)** | **0.5354** | 0.53 | 315.12 |
-| **Attraction-Uniform**| Shell Layout | 0.7011 | 0.76 | 211.45 |
-| **Attraction-Weighted**| **Shells + POIs** | **0.7554** | **0.81** | **185.34** |
-
-### 6.2.2 Kết quả thực nghiệm tại Seoul (SEO)
-| Phiên bản mô hình | Lực hút ($D_j$) | **CPC** | **$R^2$** | **MAE** |
-| :--- | :--- | :--- | :--- | :--- |
-| **Attraction-Weighted**| **Shells + POIs** | **0.7623** | **0.77** | **1,154.30** |
-| **Attraction-Uniform** | Shell Layout | 0.7205 | 0.73 | 1,387.03 |
-| **Exponential Decay** | **POI ($B_j$)** | **0.6674** | **0.70** | **1,521.82** |
-| **Exponential Decay** | Population | 0.6058 | 0.63 | 1,997.44 |
-| **Power Decay** | **POI ($B_j$)** | **0.5787** | 0.32 | 1,942.15 |
-| **Power Decay** | Population | 0.5311 | 0.46 | 2,376.05 |
-| **Radiation** | **POI ($B_j$)** | 0.3673 | -5.29 | 3,159.82 |
-| **Radiation** | Population | 0.3073 | -5.02 | 3,302.96 |
-
-
-### 6.2.3 Kết quả thực nghiệm tại 50 thành phố Hoa Kỳ
-
-![Average CPC 50 Cities](avg_cpc_50_cities.png)
-*Hình 3: So sánh CPC trung bình của 8 biến thể mô hình trên 50 thành phố Hoa Kỳ.*
-
-![CPC Distribution 50 Cities](cpc_distribution_50_cities.png)
-*Hình 4: Phân bổ chỉ số CPC của các mô hình trên 50 tập dữ liệu thành phố Hoa Kỳ.*
-
-## 6.3 Phân tích tổng hợp hiệu suất (Global Performance Synthesis)
-Kết quả trung bình trên 50 thành phố Hoa Kỳ mang lại cái nhìn toàn diện về thứ bậc hiệu suất của các dòng mô hình:
-
-| Model Framework | Global Avg CPC | Logic cốt lõi |
-| :--- | :--- | :--- |
-| **Attraction-Uniform (Shell)** | **0.7673** | Phân bổ đều trong dải 1km |
-| **Attraction-Weighted (POI)** | **0.7065** | Vỏ Shell + Trọng số POI |
-| **Power-Pop (Gravity PC)** | 0.6483 | Ràng buộc sản lượng + Khoảng cách |
-| **Exp-Pop (Gravity PC)** | 0.6440 | Ràng buộc sản lượng + Khoảng cách |
-| **Exp-POI (Gravity PC)** | 0.5693 | POI là lực hấp dẫn |
-| **Power-POI (Gravity PC)** | 0.5605 | POI là lực hấp dẫn |
-| **Radiation (Pop)** | 0.5189 | Cơ hội xen giữa (Dân số) |
-| **Radiation (POI)** | 0.4675 | Cơ hội xen giữa (POI) |
-
-> [!TIP]
-> Mô hình **Attraction-Uniform** đạt hiệu suất cao nhất tại 62% số thành phố, đặc biệt là tại các đô thị dàn trải của Hoa Kỳ, trong khi **Attraction-Weighted** chiếm ưu thế tại các đô thị có sự tập trung tiện ích rõ rệt (38%).
-
-
-## 6.4 Thử nghiệm Quy luật theo Cụm (Intra-District Law)
-Để kiểm tra xem liệu quy luật di chuyển tinh chỉnh riêng cho từng vùng (District-tailored law) có tối ưu hơn quy luật chung không, chúng tôi áp dụng xác suất $P(bin_k)$ được tính toán từ chính các subzone trong cùng một cụm để dự báo nội vùng.
-
-| Chỉ số CPC | Seoul (SU) | Singapore (SGP) |
-| :--- | :--- | :--- |
-| Intra-District Law (Local) | **0.7295** | **0.5678** |
-| Global Law (Transfer) | 0.7235 | 0.5572 |
-| Chênh lệch (Gain) | +0.0060 | +0.0106 |
-
-## 6.5 Kết quả kiểm chứng khả năng suy rộng (Spatial Generalization Results)
-Thử nghiệm **Distributed-Sampling Shell** được thực hiện để đánh giá khả năng suy rộng của quy luật di chuyển dải khi dữ liệu huấn luyện bị hạn chế nhưng đảm bảo tính bao phủ không gian (stratified sampling across all clusters).
-
-| Thành phố | **Localized Baseline** | **Global Law (90%)** | **10% Sample** | **1% Sample** |
-| :--- | :--- | :--- | :--- | :--- |
-| **Seoul (SEO)** | **0.7623** | 0.7259 | 0.7248 | 0.7221 |
-| **Singapore (SGP)** | **0.6764** | 0.5492 | 0.5479 | 0.5428 |
-
-
-![Comprehensive Sensitivity Curve](su/step15_comprehensive_sensitivity.png)
-*Hình 5: Đường cong độ nhạy toàn diện (Sensitivity Curve) từ 1% đến 100% dữ liệu huấn luyện (Kết hợp thử nghiệm Distributed Sampling).*
-
 # 7. Discussion
 Phân tích kết quả thực nghiệm mở rộng trên 52 thành phố (bao gồm Singapore, Seoul và 50 thành phố Hoa Kỳ) mang lại những thảo luận quan trọng về các quy luật di chuyển đô thị hiện đại:
 
-- **Sự xác nhận của quy luật di chuyển phụ thuộc quy mô (Scale-dependence)**: Việc các mô hình Shell đề xuất chiếm ưu thế tuyệt đối (100% trường hợp đạt CPC cao nhất) trên tất cả các tập dữ liệu thành phố là minh chứng mạnh mẽ cho giả thuyết về tính phụ thuộc quy mô. Thay vì cố gắng khớp một hàm suy giảm liên tục (như Gravity), việc rời rạc hóa không gian và sử dụng xác suất di chuyển có điều kiện $P(bin_k|i)$ cho phép mô hình thích ứng linh hoạt với mọi biến động về hạ tầng và cấu trúc không gian đô thị.
-- **Tính phi phổ quát của các hàm Gravity truyền thống**: Kết quả so sánh 50/50 giữa hàm Exponential và Power Decay trên 50 thành phố Hoa Kỳ khẳng định rằng không tồn tại một "hàm số vạn năng" cho di chuyển đô thị. Mỗi thành phố có một đặc thù suy giảm chi phí di chuyển riêng, và việc sử dụng khung xác suất thực nghiệm rời rạc đã giải quyết triệt để hạn chế này bằng cách tự thích nghi với dữ liệu tại chỗ.
-- **Giá trị kinh tế của dữ liệu mở (POI)**: Mặc dù mô hình Attraction-Uniform là một baseline cực kỳ mạnh mẽ (chiếm 62% số thành phố), việc tích hợp trọng số POI (Attraction-Weighted) đã giúp cải thiện độ chính xác tại 31% số thành phố còn lại, đặc biệt là tại các siêu đô thị nén như Singapore và Seoul. Điều này chứng minh rằng khi dải khoảng cách đã được xác định, các điểm tiện ích OSM đóng vai trò là "lực hấp dẫn" chính yếu quyết định điểm đến cuối cùng.
-- **Lợi thế phi tham số và tính chuyển giao**: So với các hướng tiếp cận học máy sâu (Deep Learning) đòi hỏi tài nguyên tính toán khổng lồ, mô hình đề xuất nổi bật nhờ đặc tính **phi tham số (non-parametric)** và **yêu cầu dữ liệu thấp**. Việc đạt được CPC trung bình trên 0.70 trên 50 thành phố khác nhau mà không cần quy trình huấn luyện phức tạp mở ra cơ hội ứng dụng rộng rãi tại các quốc gia đang phát triển.
-- **Hạn chế và hướng phát triển**: 
-    1. Nghiên cứu hiện tại chỉ sử dụng khoảng cách Euclidean; việc áp dụng khoảng cách mạng lưới (Network distance) dựa trên hạ tầng giao thông thực tế có thể giúp tinh chỉnh độ chính xác của các dải (shells). 
-    2. Độ phân giải bin 1km phát huy hiệu quả tốt ở quy mô đô thị lớn nhưng có thể cần được điều chỉnh (ví dụ: 500m) khi áp dụng cho các đô thị nhỏ hơn để bắt kịp các biến động di chuyển ở quy mô vi mô.
-    3. Cần nghiên cứu sâu hơn về sự chuyển pha (phase transition) của các giá trị xác suất $P(bin_k|i)$ giữa các loại hình đô thị khác nhau để xây dựng một mô hình dự báo hoàn chỉnh cho các vùng hoàn toàn không có dữ liệu.
-
 # 8. Conclusion
-Nghiên cứu đã thành công trong việc thiết lập một khung phương pháp luận thống nhất và chứng minh tính hiệu quả vượt trội của mô hình **Attraction-Weighted Shell** trên quy mô toàn cầu. Các kết luận chính bao gồm:
-
-1.  Mô hình đề xuất đạt độ chính xác CPC trung bình từ **0.67 đến 0.84** trên 52 thành phố nghiên cứu, vượt xa các mô hình truyền thống (Gravity, Radiation) trong 100% các trường hợp thực nghiệm.
-2.  Việc sử dụng xác suất di chuyển có điều kiện theo dải ($P(bin_k|i)$) là yếu tố mang tính đột phá, giúp mô hình vượt qua giới hạn của các hàm suy giảm khoảng cách parametric cứng nhắc và thích ứng với cấu trúc đô thị đa dạng.
-3.  Dữ liệu mở **OpenStreetMap (POI)** chứng minh được giá trị chiến lược trong việc mô hình hóa lực hấp dẫn đô thị, giúp tinh chỉnh độ chính xác của việc phục hồi luồng di chuyển mà không cần dữ liệu cá nhân nhạy cảm.
-4.  Tính phi tham số và khả năng áp dụng trực tiếp giúp mô hình trở thành công cụ đắc lực cho các nhà quy hoạch đô thị, đặc biệt là tại các khu vực thiếu hụt dữ liệu khảo sát lịch sử.
-
-Nghiên cứu này không chỉ đóng góp về mặt kỹ thuật mà còn củng cố nền tảng lý thuyết về quy luật di chuyển phụ thuộc quy mô, mở đường cho các nghiên cứu tiếp theo về quản lý đô thị thông minh và bền vững.
 
 
 # 9. References

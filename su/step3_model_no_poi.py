@@ -4,82 +4,92 @@ import numpy as np
 import os
 
 # Configuration
-BINNED_FILE = 'binned_trips_by_zone.csv'
 SZ_SHAPEFILE = 'sub_zone/data_seoul_subzone.shp'
+TRIPS_FILE = 'aggregated_trips.csv'
+BINNED_FILE = 'binned_trips_by_zone.csv'
 OUTPUT_FILE = 'step3_gravity_results.csv'
-CITY_CRS = 'EPSG:5179'  # Matching UTM-K used in Step 1
+CITY_CRS = 'EPSG:5179'
 
 def main():
-    print("🚀 Step 3 (SEOUL Study): Modeling Version No POI (Equal Distribution)...")
+    print("🚀 Step 3 (SEOUL): Attraction-Uniform (No POI) - j != i Constraint")
 
-    if not os.path.exists(BINNED_FILE) or not os.path.exists(SZ_SHAPEFILE):
-        print(f"❌ Error: Required files ({BINNED_FILE} or {SZ_SHAPEFILE}) missing.")
-        return
-
-    # 1. Load Data
-    print("📖 Loading binned histograms and subzone geometries...")
-    binned_df = pd.read_csv(BINNED_FILE)
-    
-    # We also need the shapefile to know which subzones exist and where they are
+    # 1. Load Geometry
     gdf = gpd.read_file(SZ_SHAPEFILE)
-    gdf = gdf.to_crs(CITY_CRS)
-    gdf['SUBZONE_C'] = gdf['SUBZONE_C'].astype(float) # Matching numeric IDs in binned data
-    gdf['centroid'] = gdf.geometry.centroid
+    gdf['SUBZONE_C'] = gdf['SUBZONE_C'].astype(str).str.strip().str.replace('.0', '', regex=False)
+    gdf_utm = gdf.to_crs(CITY_CRS)
+    gdf_utm['centroid'] = gdf_utm.geometry.centroid
     
-    unique_origins = binned_df['ORIGIN_SUBZONE'].unique()
-    print(f"📊 Ready to process {len(unique_origins)} origin zones.")
+    unique_zones = gdf_utm['SUBZONE_C'].unique()
+    zone_to_idx = {z: i for i, z in enumerate(unique_zones)}
+    idx_to_zone = {i: z for i, z in enumerate(unique_zones)}
+    
+    coords = np.array([[p.x, p.y] for p in gdf_utm['centroid']])
+    dist_mat = np.sqrt(np.sum((coords[:, np.newaxis, :] - coords[np.newaxis, :, :])**2, axis=2)) / 1000.0
+    bin_mat = np.floor(dist_mat).astype(int)
 
+    # 2. Load Trips and Handle Internal Flows
+    print("📖 Loading trips...")
+    trips_df = pd.read_csv(TRIPS_FILE)
+    trips_df['ORIGIN_SUBZONE'] = trips_df['ORIGIN_SUBZONE'].astype(str).str.replace('.0', '', regex=False)
+    trips_df['DESTINATION_SUBZONE'] = trips_df['DESTINATION_SUBZONE'].astype(str).str.replace('.0', '', regex=False)
+    
+    internal_lookup = trips_df[trips_df['ORIGIN_SUBZONE'] == trips_df['DESTINATION_SUBZONE']].set_index('ORIGIN_SUBZONE')['COUNT'].to_dict()
+    external_trips = trips_df[trips_df['ORIGIN_SUBZONE'] != trips_df['DESTINATION_SUBZONE']]
+    o_i_out_lookup = external_trips.groupby('ORIGIN_SUBZONE')['COUNT'].sum().to_dict()
+
+    # 3. Load inter-zone probability distributions
+    print("🧮 Loading empirical inter-zone probability distributions...")
+    binned_df = pd.read_csv(BINNED_FILE)
+    binned_df['ORIGIN_SUBZONE'] = binned_df['ORIGIN_SUBZONE'].astype(str).str.replace('.0', '', regex=False)
+    
+    probs_list = []
+    for origin_zone in binned_df['ORIGIN_SUBZONE'].unique():
+        zone_data = binned_df[binned_df['ORIGIN_SUBZONE'] == origin_zone].copy()
+        total_count = zone_data['COUNT'].sum()
+        if total_count > 0:
+            zone_data['prob'] = zone_data['COUNT'] / total_count
+            probs_list.append(zone_data[['ORIGIN_SUBZONE', 'distance_bin', 'prob']])
+            
+    probs_df = pd.concat(probs_list)
+    prob_lookup = probs_df.groupby('ORIGIN_SUBZONE').apply(lambda x: x.set_index('distance_bin')['prob'].to_dict()).to_dict()
+
+    # 4. Prediction
     final_results = []
+    for oz in unique_zones:
+        # A. Ground Truth Internal Flow
+        t_ii = internal_lookup.get(oz, 0.0)
+        final_results.append({'ORIGIN_ZONE': oz, 'DEST_SUBZONE': oz, 'T_hat_ij': t_ii})
 
-    # 2. Iterate through each origin zone
-    for i, origin_zone in enumerate(unique_origins):
-        if i % 50 == 0:
-            print(f"📍 Progress: {i}/{len(unique_origins)} zones processed...")
-            
-        # O_i: Total trips production for this origin
-        zone_binned = binned_df[binned_df['ORIGIN_SUBZONE'] == origin_zone].copy()
-        o_i = zone_binned['COUNT'].sum()
+        # B. Predict External Flows
+        o_i_out = o_i_out_lookup.get(oz, 0.0)
+        if o_i_out == 0: continue
         
-        # P(bin_k): Probability lookup
-        total_p_trips = zone_binned['COUNT'].sum()
-        zone_binned['P_bin_k'] = zone_binned['COUNT'] / total_p_trips
-        p_bin_lookup = zone_binned.set_index('distance_bin')['P_bin_k'].to_dict()
-
-        # Origin point and distance to all other zones
-        origin_feat = gdf[gdf['SUBZONE_C'] == origin_zone]
-        if origin_feat.empty: continue
-        origin_point = origin_feat.centroid.values[0]
-
-        temp_gdf = gdf.copy()
-        temp_gdf['d_ij_km'] = temp_gdf['centroid'].distance(origin_point) / 1000.0
-        temp_gdf['bin_k'] = np.floor(temp_gdf['d_ij_km']).astype(float)
+        o_probs = prob_lookup.get(oz, {})
+        o_idx = zone_to_idx[oz]
+        o_bins = bin_mat[o_idx]
         
-        # N_k: Number of subzones in each bin
-        bin_counts = temp_gdf.groupby('bin_k').size().to_dict()
+        # Count external zones per bin
+        mask_ext = (unique_zones != oz)
+        ext_bins = o_bins[mask_ext]
+        ubins, counts = np.unique(ext_bins, return_counts=True)
+        bin_counts_ext = dict(zip(ubins, counts))
 
-        # Apply Model: T_hat_ij = O_i * (P_bin_k / N_k)
-        # Note: We only predict for bins that exist in the histogram
-        for idx, row in temp_gdf.iterrows():
-            bin_id = row['bin_k']
-            p_bin_k = p_bin_lookup.get(bin_id, 0.0)
-            n_k = bin_counts.get(bin_id, 0)
+        for d_idx, bin_id in enumerate(o_bins):
+            dz = idx_to_zone[d_idx]
+            if dz == oz: continue
             
-            if p_bin_k > 0:
-                t_hat_ij = o_i * (p_bin_k / n_k)
+            p_bin = o_probs.get(float(bin_id), 0.0)
+            n_k_ext = bin_counts_ext.get(bin_id, 0)
+            
+            if p_bin > 0 and n_k_ext > 0:
+                t_hat_ij = o_i_out * (p_bin / n_k_ext)
                 final_results.append({
-                    'ORIGIN_ZONE': origin_zone,
-                    'DEST_SUBZONE': row['SUBZONE_C'],
-                    'bin_k': bin_id,
-                    'T_hat_ij': t_hat_ij
+                    'ORIGIN_ZONE': oz, 'DEST_SUBZONE': dz, 'T_hat_ij': t_hat_ij
                 })
 
-    # 3. Save Results
     results_df = pd.DataFrame(final_results)
-    print(f"💾 Saving Step 3 results to {OUTPUT_FILE}...")
     results_df.to_csv(OUTPUT_FILE, index=False)
-    
-    total_predicted = results_df['T_hat_ij'].sum()
-    print(f"✅ Step 3 Global Seoul Complete. Total Predicted Volume: {total_predicted:,.2f}")
+    print(f"✅ Step 3 complete (Seoul). Internal flows preserved.")
 
 if __name__ == "__main__":
     main()

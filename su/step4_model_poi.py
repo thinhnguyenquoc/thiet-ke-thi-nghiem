@@ -4,79 +4,91 @@ import numpy as np
 import os
 
 # Configuration
-BINNED_FILE = 'binned_trips_by_zone.csv'
 SZ_SHAPEFILE = 'sub_zone/data_seoul_subzone.shp'
+TRIPS_FILE = 'aggregated_trips.csv'
+BINNED_FILE = 'binned_trips_by_zone.csv'
 POI_FILE = 'pois_by_zone.csv'
 OUTPUT_FILE = 'step4_gravity_results.csv'
 CITY_CRS = 'EPSG:5179'
+EPSILON = 1.0
 
 def main():
-    print("🚀 Step 4 (SEOUL Study): Modeling Version POI (using OSMNX Attraction A_j)...")
-
-    if not all(os.path.exists(f) for f in [BINNED_FILE, SZ_SHAPEFILE, POI_FILE]):
-        print(f"❌ Error: Required data missing ({BINNED_FILE}, {SZ_SHAPEFILE}, or {POI_FILE}).")
-        return
+    print("🚀 Step 4 (SEOUL): Attraction-Weighted (POI) - j != i Constraint")
 
     # 1. Load Data
-    print("📖 Loading trips, geometries, and POI attraction data...")
-    binned_df = pd.read_csv(BINNED_FILE)
+    gdf = gpd.read_file(SZ_SHAPEFILE)
+    gdf['SUBZONE_C'] = gdf['SUBZONE_C'].astype(str).str.strip().str.replace('.0', '', regex=False)
+    gdf_utm = gdf.to_crs(CITY_CRS).set_index('SUBZONE_C')
+    unique_zones = gdf_utm.index.values
+    zone_to_idx = {z: i for i, z in enumerate(unique_zones)}
+    idx_to_zone = {i: z for i, z in enumerate(unique_zones)}
+    
+    # Pre-calculate distance matrix
+    coords = np.array([[p.x, p.y] for p in gdf_utm.geometry.centroid])
+    dist_mat = np.sqrt(np.sum((coords[:, np.newaxis, :] - coords[np.newaxis, :, :])**2, axis=2)) / 1000.0
+    bin_mat = np.floor(dist_mat).astype(int)
+
+    # 2. Load POI Attractions (B_j + epsilon)
     poi_df = pd.read_csv(POI_FILE)
-    gdf = gpd.read_file(SZ_SHAPEFILE).to_crs(CITY_CRS)
-    gdf['SUBZONE_C'] = gdf['SUBZONE_C'].astype(float)
-    
-    # Merge POI Attraction into geometry gdf
-    # pois_by_zone.csv has 'SUBZONE_C' and 'A_j'
-    gdf = gdf.merge(poi_df[['SUBZONE_C', 'A_j']], on='SUBZONE_C', how='left').fillna(0)
-    gdf['centroid'] = gdf.geometry.centroid
-    
-    unique_origins = binned_df['ORIGIN_SUBZONE'].unique()
-    print(f"📊 Ready to process {len(unique_origins)} origin zones.")
+    poi_df['SUBZONE_C'] = poi_df['SUBZONE_C'].astype(str).str.replace('.0', '', regex=False)
+    attr_map = poi_df.set_index('SUBZONE_C')['A_j'].to_dict()
+    attr_vec = np.array([attr_map.get(z, 0.0) for z in unique_zones]) + EPSILON
 
+    # 3. Load Trips and Handle Internal Flows
+    trips_df = pd.read_csv(TRIPS_FILE)
+    trips_df['ORIGIN_SUBZONE'] = trips_df['ORIGIN_SUBZONE'].astype(str).str.replace('.0', '', regex=False)
+    trips_df['DESTINATION_SUBZONE'] = trips_df['DESTINATION_SUBZONE'].astype(str).str.replace('.0', '', regex=False)
+    
+    internal_lookup = trips_df[trips_df['ORIGIN_SUBZONE'] == trips_df['DESTINATION_SUBZONE']].set_index('ORIGIN_SUBZONE')['COUNT'].to_dict()
+    external_trips = trips_df[trips_df['ORIGIN_SUBZONE'] != trips_df['DESTINATION_SUBZONE']]
+    o_i_out_lookup = external_trips.groupby('ORIGIN_SUBZONE')['COUNT'].sum().to_dict()
+
+    # 4. Load inter-zone probability distributions
+    binned_df = pd.read_csv(BINNED_FILE)
+    binned_df['ORIGIN_SUBZONE'] = binned_df['ORIGIN_SUBZONE'].astype(str).str.replace('.0', '', regex=False)
+    probs_df = binned_df.copy()
+    probs_df['prob'] = probs_df.groupby('ORIGIN_SUBZONE')['COUNT'].transform(lambda x: x / x.sum())
+    prob_lookup = probs_df.groupby('ORIGIN_SUBZONE').apply(lambda x: x.set_index('distance_bin')['prob'].to_dict()).to_dict()
+
+    # 5. Prediction
     final_results = []
+    for oz in unique_zones:
+        # A. Ground Truth Internal Flow
+        t_ii = internal_lookup.get(oz, 0.0)
+        final_results.append({'ORIGIN_ZONE': oz, 'DEST_SUBZONE': oz, 'T_hat_ij': t_ii})
 
-    # 2. Iterate and model using POI weights
-    for i, origin_zone in enumerate(unique_origins):
-        if i % 100 == 0:
-            print(f"📍 Progress: {i}/{len(unique_origins)} zones processed...")
-            
-        zone_binned = binned_df[binned_df['ORIGIN_SUBZONE'] == origin_zone].copy()
-        o_i = zone_binned['COUNT'].sum()
+        # B. Predicted External Flows
+        o_i_out = o_i_out_lookup.get(oz, 0.0)
+        if o_i_out == 0: continue
         
-        total_p_trips = zone_binned['COUNT'].sum()
-        zone_binned['P_bin_k'] = zone_binned['COUNT'] / total_p_trips
-        p_bin_lookup = zone_binned.set_index('distance_bin')['P_bin_k'].to_dict()
-
-        origin_feat = gdf[gdf['SUBZONE_C'] == origin_zone]
-        if origin_feat.empty: continue
-        origin_point = origin_feat.centroid.values[0]
-
-        temp_gdf = gdf.copy()
-        temp_gdf['d_ij_km'] = temp_gdf['centroid'].distance(origin_point) / 1000.0
-        temp_gdf['bin_k'] = np.floor(temp_gdf['d_ij_km']).astype(float)
+        o_probs = prob_lookup.get(oz, {})
+        o_idx = zone_to_idx[oz]
+        o_bins = bin_mat[o_idx]
         
-        # S_k: Sum of Attraction A_j per bin
-        bin_attraction_sum = temp_gdf.groupby('bin_k')['A_j'].sum().to_dict()
+        # Denominator per bin (excluding origin oz)
+        unique_bins = np.unique(o_bins)
+        bin_attr_sums_ext = {}
+        for b in unique_bins:
+            mask_b_ext = (o_bins == b) & (unique_zones != oz)
+            bin_attr_sums_ext[b] = attr_vec[mask_b_ext].sum()
 
-        for idx, row in temp_gdf.iterrows():
-            bin_id = row['bin_k']
-            p_bin_k = p_bin_lookup.get(bin_id, 0.0)
-            aj = row['A_j']
-            sum_az = bin_attraction_sum.get(bin_id, 0.0)
+        for d_idx, bin_id in enumerate(o_bins):
+            dz = idx_to_zone[d_idx]
+            if dz == oz: continue
             
-            if p_bin_k > 0 and sum_az > 0:
-                t_hat_ij = o_i * p_bin_k * (aj / sum_az)
-                final_results.append({
-                    'ORIGIN_ZONE': origin_zone,
-                    'DEST_SUBZONE': row['SUBZONE_C'],
-                    'bin_k': bin_id,
-                    'T_hat_ij': t_hat_ij
-                })
+            p_bin = o_probs.get(float(bin_id), 0.0)
+            denom_ext = bin_attr_sums_ext.get(bin_id, 0)
+            
+            if p_bin > 0 and denom_ext > 0:
+                t_hat_ij = o_i_out * p_bin * (attr_vec[d_idx] / denom_ext)
+                if t_hat_ij > 1e-6:
+                    final_results.append({
+                        'ORIGIN_ZONE': oz, 'DEST_SUBZONE': dz, 'T_hat_ij': t_hat_ij
+                    })
 
-    # 3. Save Results
     results_df = pd.DataFrame(final_results)
-    print(f"💾 Saving Step 4 results to {OUTPUT_FILE}...")
     results_df.to_csv(OUTPUT_FILE, index=False)
-    print(f"✅ Step 4 Complete using real Seoul POIs.")
+    print(f"✅ Step 4 complete (Seoul). POI weights applied for cross-zone flows.")
 
 if __name__ == "__main__":
     main()

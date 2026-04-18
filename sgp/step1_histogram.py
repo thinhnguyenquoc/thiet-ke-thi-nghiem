@@ -35,10 +35,12 @@ def main():
     trips_df['ORIGIN_SUBZONE'] = trips_df['ORIGIN_SUBZONE'].astype(str).str.strip().str.upper()
     trips_df['DESTINATION_SUBZONE'] = trips_df['DESTINATION_SUBZONE'].astype(str).str.strip().str.upper()
     
-    # Filter trips to only include zones in our shapefile
+    # Filter trips to only include zones in our shapefile AND exclude internal flows (j != i)
+    print("✂️ Excluding internal flows (i -> i) and filtering by shapefile...")
     trips_df = trips_df[
-        trips_df['ORIGIN_SUBZONE'].isin(unique_zones) & 
-        trips_df['DESTINATION_SUBZONE'].isin(unique_zones)
+        (trips_df['ORIGIN_SUBZONE'].isin(unique_zones)) & 
+        (trips_df['DESTINATION_SUBZONE'].isin(unique_zones)) &
+        (trips_df['ORIGIN_SUBZONE'] != trips_df['DESTINATION_SUBZONE'])
     ]
 
     # Calculate distances for the trips present

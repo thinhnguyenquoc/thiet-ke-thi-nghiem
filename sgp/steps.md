@@ -2,6 +2,35 @@
 
 Tài liệu này hướng dẫn các bước thực hiện để kiểm chứng **Quy luật di chuyển phụ thuộc quy mô (Scale-Dependent Mobility Law)**.
 
+## Các mô hình toán học (Mathematical Models)
+
+> [!NOTE]
+> Tất cả các mô hình dưới đây chỉ áp dụng cho luồng di chuyển giữa các vùng khác nhau (**$j \neq i$**). Các luồng nội vùng ($i \to i$) được xử lý như dữ liệu thực tế đã biết (**ground truth**) và luôn mặc định là chính xác trong quá trình đánh giá.
+
+### 1. Mô hình Shell (Production-Constrained)
+Đây là mô hình cốt lõi của nghiên cứu, kết hợp xác suất khoảng cách thực nghiệm $P(r)$ và trọng số hấp dẫn $B_j$:
+$$\hat{T}_{ij} = O_i \times P(\text{bin}_{k}|i) \times P(j|bin_k, i), \quad \text{với } j \neq i$$
+Trong đó:
+- **Attraction-Uniform**: $P(j|bin_k, i) = \frac{1}{\sum_{z \in \text{bin}_{k}, z \neq i} 1}$
+- **Attraction-Weighted**: $P(j|bin_k, i) = \frac{B_j+\epsilon}{\sum_{z \in \text{bin}_{k}, z \neq i} (B_z+\epsilon)}$
+- $O_i$: Tổng sản lượng thực tế tại vùng $i$ (chỉ tính các chuyến đi đi ra ngoài).
+- $P(\text{bin}_{k}|i)$: Xác suất di chuyển rơi vào dải khoảng cách ứng với bin $k$.
+- $B_j$: Khối lượng hấp dẫn (POI) tại vùng $j$.
+- $\epsilon = 1$: Hằng số làm mịn cho các vùng có 0 POI.
+
+### 2. Mô hình Radiation
+$$\hat{T}_{ij} = O_i \frac{m_i n_j}{(m_i + s_{ij})(m_i + n_j + s_{ij})}, \quad \text{với } j \neq i$$
+- $m_i$: Dân số (hoặc POI) tại vùng nguồn $i$.
+- $n_j$: Dân số (hoặc POI) tại vùng đích $j$.
+- $s_{ij}$: Tổng dân số (hoặc POI) trong vòng tròn tâm $i$, bán kính $r_{ij}$ (không tính $i$ và $j$).
+
+### 3. Mô hình Gravity (Parametric Decay)
+$$\hat{T}_{ij} = O_i \frac{f(r_{ij}) B_j}{\sum_{k, k \neq i} f(r_{ik}) B_k}, \quad \text{với } j \neq i$$
+- **Power Law**: $f(r) = r^{-\gamma}$
+- **Exponential Law**: $f(r) = e^{-\beta r}$
+
+---
+
 ## Phase 1: Chuẩn bị dữ liệu & Trích xuất đặc trưng
 
 ### Step 1: Phân tích Histogram & Chia khoảng cách (Binning) [DONE]
@@ -20,13 +49,13 @@ Tài liệu này hướng dẫn các bước thực hiện để kiểm chứng 
 
 ### Step 3: Mô hình Attraction-Uniform (Không POI) [DONE]
 - **Script**: `step3_model_no_poi.py`
-- **Công thức**: $$ \hat{T}_{ij} = O_{i} \times \frac{P(\text{bin}_{k})}{N_k} $$
-- **Kết quả**: Lưu phân phối xác suất tại [prob_dist_by_zone.csv](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/prob_dist_by_zone.csv)
+- **Công thức**: Xem mục 1.1 (Attraction-Uniform).
+- **Mô tả**: Dự báo luồng di chuyển liên vùng ($j \neq i$) bằng cách phân bổ đều sản lượng $O_i^{out}$ dựa trên $P(\text{bin}_{k})$. Luồng nội vùng được giữ làm ground truth.
 
 ### Step 4: Mô hình Attraction-Weighted (Sử dụng POI) [DONE]
 - **Script**: `step4_model_poi.py`
-- **Công thức**: $$ \hat{T}_{ij} = O_{i} \times P(\text{bin}_{k}) \times \frac{B_j+\epsilon}{\sum_{z \in \text{bin}_{k}} (B_z+\epsilon)} $$
-- **Lưu ý**: Sử dụng hằng số làm mịn $\epsilon = 1$ cho các vùng không có POI.
+- **Công thức**: Xem mục 1.1 (Attraction-Weighted).
+- **Lưu ý**: Sử dụng hằng số làm mịn $\epsilon = 1$ cho các vùng không có POI. Luồng nội vùng được giữ làm ground truth.
 
 ---
 
@@ -34,7 +63,7 @@ Tài liệu này hướng dẫn các bước thực hiện để kiểm chứng 
 
 ### Step 5: Mô hình Radiation (Dân số & POI) [DONE]
 - **Scripts**: `step6_radiation.py` (Population) và `step8_radiation_poi.py` (POI)
-- **Công thức**: $$ T_{ij} = O_i \frac{m_i \times n_j}{(m_i + s_{ij}) \times (m_i + n_j + s_{ij})} $$
+- **Công thức**: Xem mục 2. Luồng nội vùng được giữ làm ground truth.
 
 ### Step 6: Mô hình Gravity Distance-Decay (Tham số) [DONE]
 - **Script**: `step7_gravity_decay.py`
@@ -50,5 +79,9 @@ Tài liệu này hướng dẫn các bước thực hiện để kiểm chứng 
 
 ### Step 8: Thử nghiệm hiệu quả dữ liệu (Partial-Training Shell) [DONE]
 - **Script**: `step8_partial_training.py`
-- **Mô tả**: gom các zone thành n = [tổng zone /2, tổng zone /3, tổng zone /4, tổng zone /5, tổng zone /6, tổng zone /7, tổng zone /8, tổng zone /9, tổng zone /10] nhóm địa lý, lấy ngẫu nhiên 1 zone đại diện cho nhóm, thực hiện 20 lần. Tính toán CPC trung bình của 20 lần. kết quả so sánh CPC với Mô hình Attraction-Weighted.
-- **Kết quả**: Biểu đồ đường cong tăng trưởng CPC tại [step8_cpc_growth_curve.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step8_cpc_growth_curve.png).
+- **Mô tả**: Gom các zone thành n = [tổng zone /2, tổng zone /3, tổng zone /4, tổng zone /5, tổng zone /6, tổng zone /7, tổng zone /8, tổng zone /9, tổng zone /10] nhóm địa lý.
+- **Cơ chế chọn mẫu**:
+  - Phân cụm không gian (Spatial Clustering) sử dụng **K-Means** dựa trên tọa độ $(X, Y)$ của các vùng để chia thành $N$ nhóm ($N = Z/2 \dots Z/10$).
+  - **Lặp 20 lần**: Trong mỗi lần lặp, chọn **ngẫu nhiên 1 vùng đại diện** duy nhất trong mỗi cụm để lấy phân phối xác suất ($P_{bin}$) huấn luyện.
+  - Các vùng còn lại trong cụm sẽ "mượn" (map) phân phối xác suất của vùng đại diện đó để thực hiện dự báo.
+- **Kết quả**: Biểu đồ ổn định CPC [step8_cpc_growth_curve.png](file:///Users/nguyenquocthinh/Documents/thiet-ke-thi-nghiem/sgp/step8_cpc_growth_curve.png).
