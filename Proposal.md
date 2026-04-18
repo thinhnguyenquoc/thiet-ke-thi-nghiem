@@ -281,6 +281,8 @@ Nghiên cứu đã thực hiện phân tích đối chiếu trên 52 đô thị 
 | **Attraction-Weighted**| **Shells + POIs** | **0.645** | **0.765** |
 
 ## 6.2 Hiệu suất tổng quát trên 50 thành phố Hoa Kỳ (USA)
+Để đánh giá tính phổ quát, mô hình được áp dụng trên 50 thành phố Hoa Kỳ với các đơn vị giải thửa dân số (Tracts). Kết quả CPC trung bình cho thấy mô hình đề xuất đạt hiệu suất ổn định và vượt trội so với các Baselines truyền thống:
+
 | Mô hình | Đặc điểm | CPC Trung bình | Trạng thái |
 | :--- | :--- | :--- | :--- |
 | **Uniform Shell** | **Tối ưu nhất (USA)**| **0.794** | **TOP 1** |
@@ -288,6 +290,12 @@ Nghiên cứu đã thực hiện phân tích đối chiếu trên 52 đô thị 
 | Gravity (Exp-Pop) | Tham số tối ưu | 0.745 | Baseline |
 | Gravity (Power-Pop) | Tham số tối ưu | 0.732 | Baseline |
 | Radiation (Pop) | Không tham số | 0.483 | Baseline |
+
+![Average CPC 50 Cities](avg_cpc_50_cities.png)
+*Hình 3: So sánh chỉ số CPC trung bình của các mô hình trên 50 thành phố Hoa Kỳ.*
+
+![CPC Distribution 50 Cities](cpc_distribution_50_cities.png)
+*Hình 4: Phân phối chỉ số CPC cho thấy tính ổn định vượt trội của các mô hình Shell.*
 
 # 7. Discussion
 - **Xác nhận Quy luật Shell**: Việc mô hình Shell đạt CPC trung bình lên tới 0.79 trên 50 thành phố Hoa Kỳ chứng minh tính phổ quát của quy luật di chuyển dải.
