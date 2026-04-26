@@ -2,7 +2,7 @@
 Sử dụng mô hình dựa trên phân bổ xác suất di chuyển để ước lượng luồng di chuyển tại các thành phố lớn: Singapore, Seoul
 
 # 2. Abstract
-Dữ liệu luồng di chuyển đô thị đóng vai trò then chốt trong quy hoạch giao thông và dự báo dịch bệnh. Nghiên cứu đề xuất phương pháp **Scale-Dependent Mobility Law (Shell Model)** dựa trên phân bổ xác suất di chuyển rời rạc kết hợp với trọng số hấp dẫn từ dữ liệu mở OpenStreetMap. Thực nghiệm trên 52 thành phố (bao gồm Seoul, Singapore và 50 đô thị Hoa Kỳ) cho thấy mô hình đề xuất đạt độ chính xác vượt trội với chỉ số CPC trung bình dao động từ **0.70 đến 0.79**, cao hơn hẳn các mô hình tham số và mô hình bức xạ truyền thống. Đặc biệt, nghiên cứu khẳng định tính ổn định không gian thông qua thử nghiệm với dữ liệu mẫu phân bố trong các cụm địa lý, mô hình đạt độ bão hòa thông tin hiệu quả chỉ với **10% dữ liệu mẫu**. Kết quả này thiết lập một khung dự báo phi tham số, có khả năng chuyển giao cao cho các đô thị toàn cầu.
+Dữ liệu luồng di chuyển đô thị đóng vai trò then chốt trong quy hoạch giao thông và dự báo dịch bệnh. Nghiên cứu đề xuất phương pháp **Scale-Dependent Mobility Law (Shell Model)** dựa trên phân bổ xác suất di chuyển rời rạc kết hợp với trọng số hấp dẫn từ dữ liệu mở OpenStreetMap. Thực nghiệm trên 52 thành phố (bao gồm Seoul, Singapore và 50 đô thị Hoa Kỳ) cho thấy mô hình đề xuất đạt độ chính xác vượt trội với chỉ số CPC trung bình dao động từ **0.70 đến 0.79**, cao hơn hẳn các mô hình tham số và mô hình bức xạ truyền thống. Đặc biệt, Nghiên cứu khẳng định tính ổn định không gian thông qua thử nghiệm bootstrap với dữ liệu mẫu, mô hình đạt độ bão hòa thông tin hiệu quả chỉ với **5% dữ liệu mẫu**. Kết quả này thiết lập một khung dự báo phi tham số, có khả năng chuyển giao cao cho các đô thị toàn cầu.
 
 # 3. Introduction
 Các mô hình tương tác không gian truyền thống như Gravity và Radiation từ lâu đã được áp dụng rộng rãi để ước lượng luồng di chuyển (mobility flows) và mang lại nhiều kết quả quan trọng trong quản lý đô thị, dự báo dịch bệnh. Tuy nhiên, khả năng dự báo của các mô hình này vẫn có những giới hạn chưa thể sử dụng hiệu quả cho mọi loại hình đô thị.
@@ -21,27 +21,26 @@ Nghiên cứu đề xuất một khung phương pháp luận mới dựa trên s
 
 | Ký hiệu | Ý nghĩa | Ghi chú |
 | :--- | :--- | :--- |
-| $i, j$ | Các đơn vị phân vùng đô thị | subzones / tracts |
+| $i, j$ | Các đơn vị phân vùng thứ $i$ và $j$ | subzones / tracts |
 | $T_{ij}$ | Số lượng thực tế chuyến đi từ $i$ đến $j$ | Số lượng chuyến đi thực tế |
 | $\hat{T}_{ij}$ | Số lượng chuyến ước lượng từ $i$ đến $j$ | Số lượng chuyến đi dự báo |
 | $O_i$ | Tổng lưu lượng xuất phát từ $i$ | $\sum_j T_{ij}$ (Sản lượng - Production) |
 | $r_{ij}$ | Khoảng cách Euclidean ($i \rightarrow j$) | Tính dựa trên tâm hình học (Centroid) |
 | $m_i, n_j$ | Quy mô dân số tại vùng $i$ và $j$ | Dữ liệu từ WorldPop/Tiff 1km |
-| $s_{ij}$ | Cơ hội xen giữa (Intervening Opportunities) | Số lượng dân số trong bán kính $r_{ij}$ |
+| $s_{ij}$ | Cơ hội xen giữa (Intervening Opportunities) | Số lượng dân số hoặc số lượng POI trong bán kính $r_{ij}$ |
 | $B_j$ | Tổng số POI của vùng đích $j$ | Lấy từ dữ liệu OpenStreetMap |
 | $D_j$ | Sức hấp dẫn của vùng đích $j$ | Đại diện bởi dân số ($n_j$) hoặc POI ($B_j$) |
 | $A_i$ | Hệ số cân bằng (Balancing Factor) | Đảm bảo ràng buộc điểm nguồn: $\sum_j \hat{T}_{ij} = O_i$ |
 | $\text{bin}_k$ | Dải khoảng cách thứ $k$ | Độ phân giải 1km |
 | $P(bin_k\|i)$ | Xác suất di chuyển vào $bin_k$ từ gốc $i$ | Xác suất thực nghiệm rời rạc |
-| $\alpha, \beta, \gamma$ | Các tham số hiệu chỉnh | Tham số mô hình Gravity / Radiation |
+| $\alpha, \beta, \gamma$ | Các tham số hiệu chỉnh | Tham số mô hình Gravity |
 
 ## 4.2 Baseline 1: Gravity Models (Mô hình Trọng trường)
-Mô hình Gravity giả định luồng di chuyển tỷ lệ thuận với quy mô dân số và tỷ lệ nghịch với khoảng cách.
+Mô hình Gravity giả định luồng di chuyển tỷ lệ thuận với quy mô dân số và tỷ lệ nghịch với khoảng cách. Công thức tổng quát:
 
-### Công thức tổng quát (Production-Constrained):
-$$ \hat{T}_{ij} = A_i O_i D_j f(r_{ij}) $$
+$$ \hat{T}_{ij} = \frac{m_i^\alpha \times n_j^\beta}{f(r_{ij})} $$
 
-Trong đó $f(r_{ij})$ là hàm suy giảm khoảng cách (thường là $r_{ij}^{-\gamma}$ hoặc $e^{-\gamma r_{ij}}$). Hệ số $A_i = [\sum_j D_j f(r_{ij})]^{-1}$ giúp duy trì ràng buộc sản lượng tại điểm xuất phát.
+Trong đó $f(r_{ij})$ là hàm suy giảm khoảng cách (thường là $r_{ij}^{\gamma}$ hoặc $e^{\gamma r_{ij}}$).
 
 ### Ví dụ minh họa [12]:
 Xét hai cặp địa điểm có đặc điểm dân số và khoảng cách tương đồng để đánh giá độ nhạy của mô hình:
@@ -74,12 +73,11 @@ $$ \hat{T}_{UT} = \frac{90.000^{0.24} \times 240.000^{0.14}}{447^{0.29}} = 1.08 
 $$ \hat{T}_{AL} = \frac{89.000^{0.24} \times 280.000^{0.14}}{410^{0.29}} = 1.12 \text{ di chuyển} $$
 
 ## 4.3 Baseline 2: Radiation Model (Mô hình Bức xạ)
-Mô hình Radiation dựa trên lý thuyết về các cơ hội xen giữa, không yêu cầu các tham số ước lượng từ dữ liệu lịch sử.
+Mô hình Radiation dựa trên lý thuyết về các cơ hội xen giữa, không yêu cầu các tham số ước lượng từ dữ liệu lịch sử. Công thức tổng quát:
 
-### Công thức tổng quát:
 $$ \hat{T}_{ij} = O_i \times \frac{m_i \times n_j}{(m_i + s_{ij}) \times (m_i + n_j + s_{ij})} $$
 
-Các ký hiệu và ý nghĩa biến số tương tự quy ước tại mục 4.1.
+Với $j \neq i$ và $s_{ij} = \sum_{k \neq i,j} n_k$
 
 ### Ví dụ minh họa:
 
@@ -209,7 +207,7 @@ Kịch bản này mô phỏng việc gom nhóm các vùng $i$ có toạ độ đ
 - **Kiểm chứng**: Áp dụng hàm xác suất tìm được cho các vùng thuộc nhóm. Sau đó đánh giá độ chính xác qua chỉ số **CPC**.
 
 Thang đo việc sử dụng dữ liệu để huấn luyện hàm xác suất là tỷ lệ phần trăm số vùng được sử dụng để huấn luyện hàm xác suất so với tổng số vùng trong mỗi nhóm.
-Ví dụ gom cụn các vùng thành 10 nhóm, mỗi nhóm có 10 vùng. vậy nếu mỗi nhóm chọn 1 vùng để lấy đặc trưng huần luyện thì tỉ lệ sử dụng dữ liệu là 10%.
+Để tăng cường độ tin cậy, nghiên cứu thực hiện thêm phân tích **Bootstrap** bằng cách lấy mẫu ngẫu nhiên các bản ghi OD với nhiều tỷ lệ (từ 1% đến 80%) và lặp lại nhiều lần để đo lường mức độ suy giảm hiệu suất (model decay) và độ lệch chuẩn.
 
 # 5. Đặc tả dữ liệu thực nghiệm và mô hình kiểm thử
 ## 5.1 Dữ liệu thực nghiệm
@@ -270,11 +268,7 @@ Với $$P(j|bin_k, i) = \frac{B_j+\epsilon}{\sum_{z \in \text{bin}_{k}} (B_z+\ep
 *Ghi chú về ước lượng tham số*: Trong nghiên cứu này, chúng tôi thực hiện ước lượng các tham số của mô hình Gravity theo cấu trúc **Singly-Constrained** (ràng buộc điểm nguồn). Để đảm bảo tính tinh gọn và khả năng suy rộng của mô hình, sức hấp dẫn của điểm đích được cố định bằng quy mô dân số ($D_j = n_j$), do đó tham số tự do duy nhất cần ước lượng là hệ số suy giảm khoảng cách $\gamma$. Tham số này được tìm kiếm thông qua giải thuật tối ưu hóa phi tuyến (`scipy.optimize.minimize`) với mục tiêu tối đa hóa chỉ số **CPC (Common Part of Commuters)** trên toàn bộ mạng lưới OD của thành phố. Phương pháp này đảm bảo mô hình không chỉ khớp về mặt thống kê mà còn đạt hiệu quả cao nhất trong việc mô phỏng cấu trúc di chuyển đô thị thực tế.
 
 ## 5.3 Đặc tả thử nghiệm bão hòa thông tin và tính ổn định không gian
-Để kiểm chứng khả năng khôi phục quy luật di chuyển từ dữ liệu hạn chế, nghiên cứu thực hiện thử nghiệm **Partial-Training** trên cả 3 tập dữ liệu (SGP, SEO, và USA). Theo đó, các mô hình được huấn luyện với tỷ lệ dữ liệu mẫu giảm dần từ 50% xuống 10%. Đầu tiên các vùng được gom nhóm thành các nhóm sao cho các vùng trong nhóm ở gần nhau. 
-
-$$\text{Số lượng nhóm} = \frac{\text{Tổng số vùng}}{n} \text{ với } n = 2,...,10$$. 
-
-Sau đó, chọn một vùng bất kỳ để tính số xác suất bin và đại diện cho cả nhóm. Cuối cùng tính toán lại toàn bộ ma trận OD với các tham số đã học được. Kết quả sẽ được thống kê cho SGP, SEO, và 10 thành phố đại diện của USA.
+2. **Phân tích Bootstrap**: Lấy mẫu ngẫu nhiên các dòng trong ma trận OD với các tỷ lệ [0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.2, 0.5, 0.8]. Mỗi tỷ lệ được chạy 20 lần để tính toán CPC trung bình và độ lệch chuẩn (Std), giúp xác định điểm bão hòa thông tin mà tại đó mô hình đạt 95% hiệu suất tối đa.
 
 # 6. Results
 Nghiên cứu đã thực hiện phân tích đối chiếu trên 52 đô thị với cấu trúc và quy mô khác nhau. Kết quả khẳng định sự thống trị của các mô hình dựa trên cấu trúc vỏ (Shell Models).
@@ -309,16 +303,28 @@ Nghiên cứu đã thực hiện phân tích đối chiếu trên 52 đô thị 
 *Hình 4: Phân phối chỉ số CPC cho thấy tính ổn định vượt trội của các mô hình Shell.*
 
 ## 6.3 Thử nghiệm bão hòa thông tin và tính ổn định không gian
-Để kiểm chứng khả năng khôi phục quy luật di chuyển từ dữ liệu hạn chế, nghiên cứu thực hiện thử nghiệm **Partial-Training** trên cả 3 tập dữ liệu (SGP, SEO, và USA). Kết quả cho thấy một quy luật bão hòa thông tin nhất quán tại mốc **10% dữ liệu mẫu**.
+Để kiểm chứng khả năng khôi phục quy luật di chuyển từ dữ liệu hạn chế, nghiên cứu thực hiện thử nghiệm **Partial-Training** và **Bootstrap** trên toàn bộ 52 thành phố. Kết quả cho thấy một quy luật bão hòa thông tin nhất quán tại mốc **5% dữ liệu mẫu**.
 
-<img src="unified_partial_training.png" width="70%" id="fig5">
+**Bảng tóm tắt kết quả phân tích Bootstrap đa quốc gia (Mốc 5%):**
+| Thành phố | Đặc điểm đô thị | CPC tối đa (100%) | CPC tại 5% | Tỷ lệ đạt được | Độ ổn định (Std) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Seoul (SEO)** | Đô thị nén Đông Á | 0.808 | 0.807 | **99.9%** | 0.009 (Rất cao) |
+| **Singapore (SGP)** | Đô thị nén Đông Nam Á | 0.729 | 0.729 | **100%** | 0.016 (Cao) |
+| **Washington DC** | Trung tâm hành chính US | 0.812 | 0.805 | **99.1%** | 0.012 (Cao) |
+| **Chicago** | Đô thị lớn US | 0.723 | 0.718 | **99.3%** | 0.014 (Cao) |
+| **New York** | Siêu đô thị US | 0.591 | 0.585 | **98.9%** | 0.015 (Cao) |
+| **Trung bình US (50 TP)** | Đa dạng cấu trúc | 0.760 | 0.758 | **99.7%** | 0.024 (Ổn định) |
 
-*Hình 5: Đường cong bão hòa thông tin thể hiện tính ổn định của chỉ số CPC khi giảm tỷ lệ dữ liệu mẫu huấn luyện.*
+<img src="unified_bootstrap_saturation_v2.png" width="100%" id="fig5">
 
-**Nhận xét**: 
-- **Độ dốc cực thấp**: Ngay cả khi giảm tỷ lệ dữ liệu mẫu từ 50% xuống 10%, chỉ số CPC chỉ giảm trung bình ít hơn **0.02** đơn vị trên cả 3 khu vực.
-- **Tính bão hòa**: Tại mốc 10% dữ liệu, mô hình Shell vẫn đạt được hơn **98% hiệu suất** so với khi có đầy đủ dữ liệu. Điều này khẳng định rằng quy luật di chuyển dải (Shell-based) có tính phổ quát không gian cao, cho phép đại diện cho toàn bộ đô thị chỉ bằng các quan sát tại các cụm khu vực giới hạn.
-- **USA Cities**: Đặc biệt tại các thành phố Hoa Kỳ, CPC duy trì ổn định ở mức cao (~0.79) ngay cả ở tỷ lệ mẫu thấp, chứng minh tính khả thi của mô hình tại các vùng thiếu hụt dữ liệu khảo sát diện rộng.
+*Hình 5: Phân tích hiệu quả dữ liệu toàn cầu. (A) Sự hội tụ của độ chính xác (CPC) vượt ngưỡng 95% tại mốc 5%. (B) Sự sụt giảm mạnh của độ lệch chuẩn (Std) tại mốc 5%, đánh dấu điểm uốn (Elbow Point) của tính ổn định dự báo.*
+
+**Nhận xét và Phân tích**: 
+- **Tính phổ quát của ngưỡng 5%**: Thực nghiệm mở rộng trên **50 thành phố Hoa Kỳ** khẳng định **100% các đô thị** đều đạt ngưỡng bão hòa thông tin (95% Max CPC) tại hoặc trước mốc 5% dữ liệu huấn luyện. Ngay cả với các siêu đô thị có cấu trúc phức tạp như New York hay Los Angeles, quy luật di chuyển dải (Shell-based) vẫn được phục hồi chính xác từ mẫu rất nhỏ.
+- **Điểm uốn tối ưu (The Elbow Point)**: Biểu đồ 5B cho thấy sự cải thiện vượt bậc về **tính ổn định**. 
+    * Khi tăng mẫu từ 1% lên 5%, độ lệch chuẩn (Std) giảm mạnh trung bình **trên 2 lần**, cho thấy mô hình thoát khỏi sự phụ thuộc vào các biến động ngẫu nhiên khi lấy mẫu.
+    * Sau mốc 5%, đường cong Std bắt đầu đi ngang (bão hòa), việc thêm dữ liệu không còn mang lại giá trị gia tăng đáng kể về mặt khoa học.
+- **Khả năng ứng dụng**: Với bằng chứng từ 52 thành phố toàn cầu (SGP, SEO, và 50 US Cities), nghiên cứu kết luận rằng một tập mẫu 5% là đủ để tái tạo ma trận OD toàn thành phố với độ tin cậy tương đương 100% dữ liệu quan sát.
 
 # 7. Discussion
 Phân tích kết quả thực nghiệm trên 52 thành phố mang lại những kết luận quan trọng về các quy luật di chuyển đô thị hiện đại:
@@ -338,7 +344,7 @@ Một trong những phát hiện quan trọng nhất là sự khác biệt về 
 - **Tính ổn định của Quy luật Shell**: Phát hiện này khẳng định rằng quy luật Shell (dựa trên khoảng cách rời rạc) là khung xương vững chắc cho mọi đô thị, trong khi việc tích hợp thêm các biến số như POI cần được cân nhắc dựa trên đặc thù quy hoạch của từng khu vực.
 
 ## 7.2 Tính bão hòa thông tin và sự ổn định
-Thử nghiệm Partial-Training (Hình 5) xác nhận quy luật di chuyển có thể được khôi phục chính xác chỉ với **10% dữ liệu mẫu**. Điều này cho thấy quy luật di chuyển dải có tính bao quát cao trong không gian, cho phép khôi phục ma trận OD toàn thành phố từ các quan sát hạn chế.
+Thử nghiệm trên 52 thành phố xác nhận quy luật di chuyển có thể được khôi phục chính xác chỉ với **5% dữ liệu mẫu**. Điểm bão hòa này không phụ thuộc vào cấu trúc đô thị (Compact vs. Sprawl), cho thấy quy luật di chuyển dải (Shell-based) phản ánh một bản chất thống kê sâu sắc của hành vi con người trong không gian đô thị. Việc đạt được độ lệch chuẩn thấp (~0.01) tại ngưỡng 5% cho phép các nhà quy hoạch tự tin sử dụng các tập dữ liệu mẫu nhỏ để dự báo lưu lượng giao thông với độ tin cậy tương đương khảo sát diện rộng.
 
 ## 7.3 Tính khả thi của dữ liệu mở
 Việc sử dụng dữ liệu POI từ OSM thay cho dữ liệu dân số truyền thống giúp tăng độ chính xác của mô hình lên đáng kể (weighted vs uniform), đặc biệt là tại các đô thị nén như Singapore và Seoul.
